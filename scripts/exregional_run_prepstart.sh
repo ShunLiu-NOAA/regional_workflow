@@ -55,7 +55,7 @@ specified cycle.
 #
 #-----------------------------------------------------------------------
 #
-valid_args=( "cycle_dir" "modelinputdir" "fg_root")
+valid_args=( "cycle_dir" "modelinputdir" "lbcs_root" "fg_root")
 process_args valid_args "$@"
 #
 #-----------------------------------------------------------------------
@@ -98,6 +98,7 @@ YYYYMMDD=${YYYYMMDDHH:0:8}
 # prepare initial conditions for 
 #     cold start if BKTYPE=1 
 #     warm start if BKTYPE=0
+#     spinupcyc + warm start if BKTYPE=0
 #       the previous 6 cycles are searched to find the restart files
 #       valid at this time from the closet previous cycle.
 #
@@ -173,7 +174,7 @@ if [ "${NET}" = "RTMA" ]; then
     #find a bdry file last modified before current cycle time and size > 100M 
     #to make sure it exists and was written out completely. 
     TIME1HAGO=$(date -d "${START_DATE}" +"%Y-%m-%d %H:%M:%S")
-    bdryfile0=${fg_root}/$(cd $fg_root;find . -name "gfs_bndy.tile7.000.nc" ! -newermt "$TIME1HAGO" -size +100M | xargs ls -1rt |tail -n 1)
+    bdryfile0=${lbcs_root}/$(cd $lbcs_root;find . -name "gfs_bndy.tile7.000.nc" ! -newermt "$TIME1HAGO" -size +100M | xargs ls -1rt |tail -n 1)
     bdryfile1=$(echo $bdryfile0 | sed -e "s/gfs_bndy.tile7.000.nc/gfs_bndy.tile7.001.nc/")
     ln_vrfy -snf ${bdryfile0} .
     ln_vrfy -snf ${bdryfile1} .
@@ -194,7 +195,7 @@ else
   n=${EXTRN_MDL_LBCS_SEARCH_OFFSET_HRS}
   end_search_hr=$(( 12 + ${EXTRN_MDL_LBCS_SEARCH_OFFSET_HRS} ))
   YYYYMMDDHHmInterv=$(date +%Y%m%d%H -d "${START_DATE} ${n} hours ago")
-  lbcs_path=${fg_root}/${YYYYMMDDHHmInterv}/lbcs
+  lbcs_path=${lbcs_root}/${YYYYMMDDHHmInterv}/lbcs
   while [[ $n -le ${end_search_hr} ]] ; do
     last_bdy_time=$(( n + ${FCST_LEN_HRS_thiscycle} ))
     last_bdy=$(printf %3.3i $last_bdy_time)
@@ -205,7 +206,7 @@ else
     else
       n=$((n + 1))
       YYYYMMDDHHmInterv=$(date +%Y%m%d%H -d "${START_DATE} ${n} hours ago")
-      lbcs_path=${fg_root}/${YYYYMMDDHHmInterv}/lbcs
+      lbcs_path=${lbcs_root}/${YYYYMMDDHHmInterv}/lbcs
     fi
   done
 #
