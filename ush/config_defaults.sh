@@ -445,6 +445,13 @@ FCST_LEN_HRS="24"
 FCST_LEN_HRS_CYCLES=( )
 DA_CYCLE_INTERV="3"
 RESTART_INTERVAL="3,6"
+BDY_START_CYCL="YYYYMMDDDHHMM"
+BDY_END_CYCL="YYYYMMDDDHHMM"
+SPINUP_START_CYCL="YYYYMMDDDHHMM"
+SPINUP_END_CYCL="YYYYMMDDDHHMM"
+PROD_START_CYCL="YYYYMMDDDHHMM"
+PROD_END_CYCL="YYYYMMDDDHHMM"
+
 
 #-----------------------------------------------------------------------
 #
@@ -1434,10 +1441,12 @@ GET_EXTRN_LBCS_TN="get_extrn_lbcs"
 GET_EXTRN_LBCS_LONG_TN="get_extrn_lbcs_long"
 MAKE_ICS_TN="make_ics"
 MAKE_LBCS_TN="make_lbcs"
+RUN_SPINUP_TN="run_spinup"
 RUN_FCST_TN="run_fcst"
 RUN_POST_TN="run_post"
 
 ANAL_GSI_TN="anal_gsi_input"
+PREP_START_TN="prep_start"
 PREP_COLDSTART_TN="prep_coldstart"
 PREP_WARMSTART_TN="prep_warmstart"
 PROCESS_RADAR_REF_TN="process_radarref"
@@ -1654,6 +1663,7 @@ DO_DACYCLE="FALSE"
 #      retrospective experiments.
 #
 DO_RETRO="FALSE"
+DO_SPINUP="FALSE"
 LBCS_ICS_ONLY="FALSE"
 #
 #-----------------------------------------------------------------------
