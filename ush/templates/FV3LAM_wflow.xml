@@ -618,7 +618,7 @@ MODULES_RUN_TASK_FP script.
     <nodesize>&NCORES_PER_NODE;</nodesize>
     <walltime>{{ wtime_run_prepstart }}</walltime>
     <jobname>&TAG;_&PREP_START_TN;</jobname>
-    <join><cyclestr>&LOGDIR;/&PREP_START_TN;_@Y@m@d@H.log</cyclestr></join>
+    <join><cyclestr>&LOGDIR;/&PREP_START_TN;_prod_cycstart_@Y@m@d@H.log</cyclestr></join>
 
     <envar><name>GLOBAL_VAR_DEFNS_FP</name><value>&GLOBAL_VAR_DEFNS_FP;</value></envar>
     <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
@@ -632,8 +632,8 @@ MODULES_RUN_TASK_FP script.
     <dependency>
        <and>
           <or>
-             <streq><left>00</left><right><cyclestr>@H</cyclestr></right></streq>
-             <streq><left>12</left><right><cyclestr>@H</cyclestr></right></streq>
+             <streq><left>06</left><right><cyclestr>@H</cyclestr></right></streq>
+             <streq><left>18</left><right><cyclestr>@H</cyclestr></right></streq>
            </or>
           <datadep age="00:00:01:00"><cyclestr offset="-3600">&FG_ROOT;/spinup/@Y@m@d@H/fcst_fv3lam/dynf001.nc</cyclestr></datadep>
        </and>
@@ -651,7 +651,7 @@ MODULES_RUN_TASK_FP script.
     <nodesize>&NCORES_PER_NODE;</nodesize>
     <walltime>{{ wtime_run_prepstart }}</walltime>
     <jobname>&TAG;_&PREP_START_TN;</jobname>
-    <join><cyclestr>&LOGDIR;/&PREP_START_TN;_@Y@m@d@H.log</cyclestr></join>
+    <join><cyclestr>&LOGDIR;/&PREP_START_TN;_prod_@Y@m@d@H.log</cyclestr></join>
 
     <envar><name>GLOBAL_VAR_DEFNS_FP</name><value>&GLOBAL_VAR_DEFNS_FP;</value></envar>
     <envar><name>PDY</name><value><cyclestr>@Y@m@d</cyclestr></value></envar>
@@ -659,14 +659,14 @@ MODULES_RUN_TASK_FP script.
     <envar><name>CYCLE_DIR</name><value><cyclestr>&CYCLE_BASEDIR;/prod/@Y@m@d@H</cyclestr></value></envar>
     <envar><name>PRODCYCLE_DIR</name><value><cyclestr>&CYCLE_BASEDIR;/prod/@Y@m@d@H</cyclestr></value></envar>
     <envar><name>LBCS_ROOT</name><value><cyclestr>&CYCLE_BASEDIR;/spinup</cyclestr></value></envar>
-    <envar><name>FG_ROOT</name><value><cyclestr>&CYCLE_BASEDIR;/prod</cyclestr></value></envar>
+    <envar><name>FG_ROOT</name><value><cyclestr>&FG_ROOT;/prod</cyclestr></value></envar>
     <envar><name>BKTYPE</name><value><cyclestr>0</cyclestr></value></envar>
 
     <dependency>
        <and>
           <or>
-             <strneq><left>00</left><right><cyclestr>@H</cyclestr></right></strneq>
-             <strneq><left>12</left><right><cyclestr>@H</cyclestr></right></strneq>
+             <strneq><left>06</left><right><cyclestr>@H</cyclestr></right></strneq>
+             <strneq><left>18</left><right><cyclestr>@H</cyclestr></right></strneq>
            </or>
           <datadep age="00:00:01:00"><cyclestr offset="-3600">&FG_ROOT;/prod/@Y@m@d@H/fcst_fv3lam/dynf001.nc</cyclestr></datadep>
        </and>
