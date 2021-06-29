@@ -62,7 +62,8 @@ the specified cycle.
 #
 #-----------------------------------------------------------------------
 #
-modelinputdir=${CYCLE_DIR}/fcst_fv3lam/INPUT
+#modelinputdir=${CYCLE_DIR}/fcst_fv3lam/INPUT
+modelinputdir=${PRODCYCLE_DIR}/fcst_fv3lam/INPUT
 rm -fr ${modelinputdir}
 mkdir_vrfy -p ${modelinputdir}
 #
@@ -76,6 +77,7 @@ mkdir_vrfy -p ${modelinputdir}
 $SCRIPTSDIR/exregional_run_prepstart.sh \
              cycle_dir="${CYCLE_DIR}" \
              modelinputdir="${modelinputdir}" \
+             lbcs_root="${LBCS_ROOT}" \
              fg_root="${FG_ROOT}" || \
 print_err_msg_exit "\
 Call to ex-script corresponding to J-job \"${scrfunc_fn}\" failed."

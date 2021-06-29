@@ -188,9 +188,11 @@ settings="\
   'get_extrn_lbcs_long_tn': ${GET_EXTRN_LBCS_LONG_TN}
   'make_ics_tn': ${MAKE_ICS_TN}
   'make_lbcs_tn': ${MAKE_LBCS_TN}
+  'run_spinup': ${RUN_SPINUP_TN}
   'run_fcst_tn': ${RUN_FCST_TN}
   'run_post_tn': ${RUN_POST_TN}
   'anal_gsi': ${ANAL_GSI_TN}
+  'prep_start': ${PREP_START_TN}
   'prep_coldstart': ${PREP_COLDSTART_TN}
   'prep_warmstart': ${PREP_WARMSTART_TN}
   'process_radarref': ${PROCESS_RADAR_REF_TN}
