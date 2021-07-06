@@ -337,6 +337,7 @@ settings="\
   'cycl_freq': !!str 12:00:00
   'at_start_cycledef': ${AT_START_CYCLEDEF}
   'initial_cycledef': ${INITIAL_CYCLEDEF}
+  'spinup_cycledef': ${SPINUP_CYCLEDEF}
   'boundary_cycledef': ${BOUNDARY_CYCLEDEF}
   'boundary_long_cycledef': ${BOUNDARY_LONG_CYCLEDEF}
   'prep_coldstart_cycledef': ${PREP_COLDSTART_CYCLEDEF}
