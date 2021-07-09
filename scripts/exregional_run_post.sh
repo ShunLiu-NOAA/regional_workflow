@@ -64,7 +64,6 @@ valid_args=( \
 "fhr" \
 "tmmark" \
 )
-#echo $tmmark
 process_args valid_args "$@"
 #
 #-----------------------------------------------------------------------
@@ -116,6 +115,10 @@ case $MACHINE in
     ;;
 
   "ORION")
+    ulimit -s unlimited
+    ulimit -a
+    export OMP_NUM_THREADS=1
+    export OMP_STACKSIZE=1024M
     APRUN="srun"
     ;;
 
@@ -155,28 +158,41 @@ esac
 #
 rm_vrfy -f fort.*
 cp_vrfy ${EMC_POST_DIR}/parm/nam_micro_lookup.dat ./eta_micro_lookup.dat
+ln_vrfy -snf ${FIX_CRTM}/*bin ./
 if [ ${USE_CUSTOM_POST_CONFIG_FILE} = "TRUE" ]; then
   post_config_fp="${CUSTOM_POST_CONFIG_FP}"
+  post_params_fp="${CUSTOM_POST_PARAMS_FP}"
   print_info_msg "
 ====================================================================
 Copying the user-defined post flat file specified by CUSTOM_POST_CONFIG_FP
 to the post forecast hour directory (fhr_dir):
   CUSTOM_POST_CONFIG_FP = \"${CUSTOM_POST_CONFIG_FP}\"
+  CUSTOM_POST_PARAMS_FP = \"${CUSTOM_POST_PARAMS_FP}\"
   fhr_dir = \"${fhr_dir}\"
 ===================================================================="
 else
   post_config_fp="${EMC_POST_DIR}/parm/postxconfig-NT-fv3lam.txt"
+  post_params_fp="${EMC_POST_DIR}/parm/params_grib2_tbl_new"
   print_info_msg "
 ====================================================================
 Copying the default post flat file specified by post_config_fp to the post
 forecast hour directory (fhr_dir):
   post_config_fp = \"${post_config_fp}\"
+  post_params_fp = \"${post_params_fp}\"
   fhr_dir = \"${fhr_dir}\"
 ===================================================================="
 fi
 cp_vrfy ${post_config_fp} ./postxconfig-NT.txt
-cp_vrfy ${EMC_POST_DIR}/parm/params_grib2_tbl_new ./params_grib2_tbl_new
+cp_vrfy ${post_params_fp} ./params_grib2_tbl_new
 cp_vrfy ${EXECDIR}/ncep_post .
+if [ -f ${FFG_DIR}/latest.FFG ] && [ ${NET} = "RRFS_CONUS" ]; then
+  cp_vrfy ${FFG_DIR}/latest.FFG .
+  grid_specs_rrfs="lambert:-97.5:38.500000 237.826355:1746:3000 21.885885:1014:3000"
+  wgrib2 latest.FFG -match "0-12 hour" -end -new_grid_interpolation bilinear -new_grid_winds grid -new_grid ${grid_specs_rrfs} ffg_12h.grib2
+  wgrib2 latest.FFG -match "0-6 hour" -end -new_grid_interpolation bilinear -new_grid_winds grid -new_grid ${grid_specs_rrfs} ffg_06h.grib2
+  wgrib2 latest.FFG -match "0-3 hour" -end -new_grid_interpolation bilinear -new_grid_winds grid -new_grid ${grid_specs_rrfs} ffg_03h.grib2
+  wgrib2 latest.FFG -match "0-1 hour" -end -new_grid_interpolation bilinear -new_grid_winds grid -new_grid ${grid_specs_rrfs} ffg_01h.grib2
+fi
 #
 #-----------------------------------------------------------------------
 #
@@ -188,17 +204,6 @@ cp_vrfy ${EXECDIR}/ncep_post .
 yyyymmdd=${cdate:0:8}
 hh=${cdate:8:2}
 cyc=$hh
-#
-#-----------------------------------------------------------------------
-#
-# The tmmark is a reference value used in real-time, DA-enabled NCEP models.
-# It represents the delay between the onset of the DA cycle and the free
-# forecast.  With no DA in the SRW App at the moment, it is hard-wired to
-# tm00 for now. 
-#
-#-----------------------------------------------------------------------
-#
-#tmmark="tm00"
 #
 #-----------------------------------------------------------------------
 #
@@ -221,7 +226,7 @@ ${dyn_file}
 netcdf
 grib2
 ${post_yyyy}-${post_mm}-${post_dd}_${post_hh}:00:00
-FV3R
+${POST_FULL_MODEL_NAME}
 ${phy_file}
 
  &NAMPGB
@@ -309,8 +314,8 @@ if [ ${#ADDNL_OUTPUT_GRIDS[@]} -gt 0 ]; then
   grid_specs_242="nps:225:60.000000 187.000000:553:11250.000000 30.000000:425:11250.000000"
   grid_specs_243="latlon 190.0:126:0.400 10.000:101:0.400"
   grid_specs_clue="lambert:262.5:38.5 239.891:1620:3000.0 20.971:1120:3000.0"
-  grid_specs_hrrr="lambert:-97.5:38.5 -122.7195:1799:3000.0 21.13812:1059:3000.0"
-  grid_specs_hrrre="lambert:-97.5:38.5 -122.71953:1800:3000.0 21.138123:1060:3000.0"
+  grid_specs_hrrr="lambert:-97.5:38.5 -122.719528:1799:3000.0 21.138123:1059:3000.0"
+  grid_specs_hrrre="lambert:-97.5:38.5 -122.719528:1800:3000.0 21.138123:1060:3000.0"
   grid_specs_rrfsak="lambert:-161.5:63.0 172.102615:1379:3000.0 45.84576:1003:3000.0"
 
   for grid in ${ADDNL_OUTPUT_GRIDS[@]}

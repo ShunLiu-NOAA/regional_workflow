@@ -245,6 +245,7 @@ EXPT_SUBDIR=""
 #    OBSPATH_NSSLMOSIAC: location of NSSL radar reflectivity 
 #    LIGHTNING_ROOT: location of lightning observations
 #    ENKF_FCSTL: location of global ensemble forecast
+#    FFG_DIR: location of flash flood guidance for QPF comparison
 #-----------------------------------------------------------------------
 #
 COMINgfs="/base/path/of/directory/containing/gfs/input/files"
@@ -266,6 +267,7 @@ OBSPATH="/public/data/grids/rap/obs"
 OBSPATH_NSSLMOSIAC="/public/data/radar/mrms"
 LIGHTNING_ROOT="/public/data/lightning"
 ENKF_FCST="/lfs4/BMC/public/data/grids/enkf/atm"
+FFG_DIR="/public/data/grids/ncep/ffg/grib2"
 
 #
 #-----------------------------------------------------------------------
@@ -406,6 +408,13 @@ WFLOW_LAUNCH_LOG_FN="log.launch_FV3LAM_wflow"
 # two-digit string representing an integer that is less than or equal to
 # 23, e.g. "00", "03", "12", "23".
 #
+# CYCL_HRS_SPINSTART:
+# An array containing the hours of the day at which the spin up cycle starts.
+#
+# CYCL_HRS_PRODSTART:
+# An array containing the hours of the day at which the product cycle starts,
+# from cold start input or from spin-up cycle forcast
+#
 # BOUNDARY_LEN_HRS
 # The length of boundary condition for normal forecast, in integer hours.
 #
@@ -414,6 +423,9 @@ WFLOW_LAUNCH_LOG_FN="log.launch_FV3LAM_wflow"
 #
 # FCST_LEN_HRS:
 # The length of each forecast, in integer hours.
+#
+# FCST_LEN_HRS_SPINUP:
+# The length of each forecastn in spin up cycles, in integer hours.
 #
 # FCST_LEN_HRS_CYCLES:
 # The length of forecast for each cycle, in integer hours.
@@ -437,23 +449,17 @@ WFLOW_LAUNCH_LOG_FN="log.launch_FV3LAM_wflow"
 DATE_FIRST_CYCL="YYYYMMDD"
 DATE_LAST_CYCL="YYYYMMDD"
 CYCL_HRS=( "HH1" "HH2" )
+CYCL_HRS_SPINSTART=( "HH1" "HH2" )
+CYCL_HRS_PRODSTART=( "HH1" "HH2" )
 BOUNDARY_LEN_HRS="0"
 BOUNDARY_LONG_LEN_HRS="0"
 POSTPROC_LEN_HRS="1"
 POSTPROC_LONG_LEN_HRS="1"
 FCST_LEN_HRS="24"
+FCST_LEN_HRS_SPINUP="1"
 FCST_LEN_HRS_CYCLES=( )
 DA_CYCLE_INTERV="3"
 RESTART_INTERVAL="3,6"
-BDY_START_CYCL="YYYYMMDDDHHMM"
-BDY_END_CYCL="YYYYMMDDDHHMM"
-INITIAL_START_CYCL="YYYYMMDDDHHMM"
-INITIAL_END_CYCL="YYYYMMDDDHHMM"
-SPINUP_START_CYCL="YYYYMMDDDHHMM"
-SPINUP_END_CYCL="YYYYMMDDDHHMM"
-PROD_START_CYCL="YYYYMMDDDHHMM"
-PROD_END_CYCL="YYYYMMDDDHHMM"
-
 
 #-----------------------------------------------------------------------
 #
@@ -487,21 +493,13 @@ PROD_END_CYCL="YYYYMMDDDHHMM"
 # cycle definition for "boundary_long" group
 # This group runs: get_extrn_lbcs_long,make_lbcs
 #
-# PREP_COLDSTART_CYCLEDEF:
-# cycle definition for "prep_coldstart" group
-# This group runs: prep_coldstart
+# SPINUP_CYCLEDEF:
+# cycle definition for spin-up cycle group
+# This group runs: anal_gsi_input_spinup and data process, run_fcst_spinup, run_post_spinup
 #
-# PREP_WARMSTART_CYCLEDEF:
-# cycle definition for "prep_warmstart" group
-# This group runs: prep_warmstart
-#
-# ANALYSIS_CYCLEDEF:
-# cycle definition for "analysis" group
-# This group runs: anal_gsi_input
-#
-# FORECAST_CYCLEDEF:
-# cycle definition for "forecast" group
-# This group runs: run_fcst, python_skewt, run_clean
+# PROD_CYCLEDEF:
+# cycle definition for product cycle group
+# This group runs: anal_gsi_input and data process, run_fcst, python_skewt, run_clean
 #
 # POSTPROC_CYCLEDEF:
 # cycle definition for "postproc" group
@@ -522,12 +520,9 @@ CYCLEMONTH="*"
 AT_START_CYCLEDEF="00 01 01 01 2100 *"
 INITIAL_CYCLEDEF="00 01 01 01 2100 *"
 BOUNDARY_CYCLEDEF="00 01 01 01 2100 *"
-SPINUP_CYCLEDEF="00 01 01 01 2100 *"
 BOUNDARY_LONG_CYCLEDEF="00 01 01 01 2100 *"
-PREP_COLDSTART_CYCLEDEF="00 01 01 01 2100 *"
-PREP_WARMSTART_CYCLEDEF="00 01 01 01 2100 *"
-ANALYSIS_CYCLEDEF="00 01 01 01 2100 *"
-FORECAST_CYCLEDEF="00 01 01 01 2100 *"
+SPINUP_CYCLEDEF="00 01 01 01 2100 *"
+PROD_CYCLEDEF="00 01 01 01 2100 *"
 POSTPROC_CYCLEDEF="00 01 01 01 2100 *"
 POSTPROC_LONG_CYCLEDEF="00 01 01 01 2100 *"
 ARCHIVE_CYCLEDEF="00 01 01 01 2100 *"
@@ -569,7 +564,7 @@ BERROR_FN="rap_berror_stats_global_RAP_tune" #under $FIX_GSI
 OBERROR_FN="errtable.rrfs"
 HYBENSINFO_FN="hybens_info.rrfs"
 AIRCRAFT_REJECT="/home/amb-verif/acars_RR/amdar_reject_lists"
-SFCOBS_USELIST="/home/amb-verif/ruc_madis_surface/mesonet_uselists"
+SFCOBS_USELIST="/lfs4/BMC/amb-verif/rap_ops_mesonet_uselists"
 #
 #-----------------------------------------------------------------------
 #
@@ -1444,14 +1439,13 @@ GET_EXTRN_LBCS_TN="get_extrn_lbcs"
 GET_EXTRN_LBCS_LONG_TN="get_extrn_lbcs_long"
 MAKE_ICS_TN="make_ics"
 MAKE_LBCS_TN="make_lbcs"
-RUN_SPINUP_TN="run_spinup"
 RUN_FCST_TN="run_fcst"
 RUN_POST_TN="run_post"
 
 ANAL_GSI_TN="anal_gsi_input"
 PREP_START_TN="prep_start"
-PREP_COLDSTART_TN="prep_coldstart"
-PREP_WARMSTART_TN="prep_warmstart"
+PREP_CYC_SPINUP_TN="prep_cyc_spinup"
+PREP_CYC_PROD_TN="prep_cyc_prod"
 PROCESS_RADAR_REF_TN="process_radarref"
 PROCESS_LIGHTNING_TN="process_lightning"
 PROCESS_BUFR_TN="process_bufr"
@@ -1584,10 +1578,20 @@ ADDNL_OUTPUT_GRIDS=( )
 # used for post-processing. This is only used if CUSTOM_POST_CONFIG_FILE
 # is set to "TRUE".
 #
+# CUSTOM_POST_PARAMS_FP:
+# The full path to the custom post params file, including filename, to be 
+# used for post-processing. This is only used if CUSTOM_POST_CONFIG_FILE
+# is set to "TRUE".
+#
+# POST_FULL_MODEL_NAME
+# The full module name required by UPP and set in the itag file
+#
 #-----------------------------------------------------------------------
 #
 USE_CUSTOM_POST_CONFIG_FILE="FALSE"
 CUSTOM_POST_CONFIG_FP=""
+CUSTOM_POST_PARAMS_FP=""
+POST_FULL_MODEL_NAME="FV3R"
 #
 #-----------------------------------------------------------------------
 #
@@ -1661,12 +1665,19 @@ DO_DACYCLE="FALSE"
 # DO_RETRO:
 # Flag turn on the retrospective experiments.
 #
+# DO_SPINUP:
+# Flag turn on the spin-up cycle.
+#
+# DO_CYCLE_SURFACE:
+# Flag turn on cycling the surface when cold start from outside model.
+#
 # LBCS_ICS_ONLY:
 # Flag turn on the runs prepare boundary and cold start initial conditions in
 #      retrospective experiments.
 #
 DO_RETRO="FALSE"
 DO_SPINUP="FALSE"
+DO_CYCLE_SURFACE="FALSE"
 LBCS_ICS_ONLY="FALSE"
 #
 #-----------------------------------------------------------------------
@@ -1797,6 +1808,8 @@ RADARREFL_TIMELEVEL=(0)
 #   the run directory under tmpnwprd directory from cycles older than (current cycle - this hour) will be cleaned 
 # CLEAN_OLDFCST_HRS
 #   the fv3lam forecast netcdf files forecast run directory from cycles older than (current cycle - this hour) will be cleaned 
+# CLEAN_OLDSTMP_HRS
+#   the postprd GRIB-2 files from cycles older than (current cycle - this hour) will be cleaned 
 #-----------------------------------------------------------------------
 #
 
@@ -1804,3 +1817,4 @@ CLEAN_OLDPROD_HRS="72"
 CLEAN_OLDLOG_HRS="48"
 CLEAN_OLDRUN_HRS="72"
 CLEAN_OLDFCST_HRS="24"
+CLEAN_OLDSTMPPOST_HRS="24"

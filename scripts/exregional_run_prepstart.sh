@@ -55,7 +55,7 @@ specified cycle.
 #
 #-----------------------------------------------------------------------
 #
-valid_args=( "cycle_dir" "modelinputdir" "lbcs_root" "fg_root")
+valid_args=( "cycle_dir" "cycle_type" "modelinputdir" "lbcs_root" "fg_root")
 process_args valid_args "$@"
 #
 #-----------------------------------------------------------------------
@@ -104,22 +104,52 @@ YYYYMMDD=${YYYYMMDDHH:0:8}
 #
 #-----------------------------------------------------------------------
 
+BKTYPE=0
+if [ ${cycle_type} -eq 1 ]; then
+   echo "spin up cycle"
+  for cyc_start in ${CYCL_HRS_SPINSTART[@]}; do
+    if [ ${HH} -eq ${cyc_start} ]; then
+      BKTYPE=1
+    fi
+  done
+else
+  echo " product cycle"
+  for cyc_start in ${CYCL_HRS_PRODSTART[@]}; do
+    if [ ${HH} -eq ${cyc_start} ]; then
+      if [ ${DO_SPINUP} == "true" ]; then
+        BKTYPE=2   # using 1-h from spinup cycle
+      else
+        BKTYPE=1
+      fi
+    fi
+  done
+fi
+
 cd_vrfy ${modelinputdir}
 
-if [ ${BKTYPE} -eq 1 ]; then  # cold start, use prepare cold strat initial files from ics
-  bkpath=${cycle_dir}/ics
-  if [ -r "${bkpath}/gfs_data.tile7.halo0.nc" ]; then
-    cp_vrfy ${bkpath}/gfs_bndy.tile7.000.nc gfs_bndy.tile7.000.nc        
-    cp_vrfy ${bkpath}/gfs_ctrl.nc gfs_ctrl.nc        
-    cp_vrfy ${bkpath}/gfs_data.tile7.halo0.nc gfs_data.tile7.halo0.nc        
-    cp_vrfy ${bkpath}/sfc_data.tile7.halo0.nc sfc_data.tile7.halo0.nc        
-    print_info_msg "$VERBOSE" "cold start from $bkpath"
-  else
-    print_err_msg_exit "Error: cannot find cold start initial condition from : ${bkpath}"
-  fi
+if [ ${BKTYPE} -eq 1 ] ; then  # cold start, use prepare cold strat initial files from ics
+    bkpath=${cycle_dir}/ics
+    if [ -r "${bkpath}/gfs_data.tile7.halo0.nc" ]; then
+      cp_vrfy ${bkpath}/gfs_bndy.tile7.000.nc gfs_bndy.tile7.000.nc        
+      cp_vrfy ${bkpath}/gfs_ctrl.nc gfs_ctrl.nc        
+      cp_vrfy ${bkpath}/gfs_data.tile7.halo0.nc gfs_data.tile7.halo0.nc        
+      cp_vrfy ${bkpath}/sfc_data.tile7.halo0.nc sfc_data.tile7.halo0.nc        
+      print_info_msg "$VERBOSE" "cold start from $bkpath"
+    else
+      print_err_msg_exit "Error: cannot find cold start initial condition from : ${bkpath}"
+    fi
 else
+
+  if [ ${cycle_type} -eq 1 ]; then
+     fcst_dir_name=fcst_fv3lam_spinup
+  else
+     fcst_dir_name=fcst_fv3lam
+  fi
+  if [ ${BKTYPE} -eq 2 ]; then
+     fcst_dir_name=fcst_fv3lam_spinup
+  fi
   YYYYMMDDHHmInterv=$( date +%Y%m%d%H -d "${START_DATE} ${DA_CYCLE_INTERV} hours ago" )
-  bkpath=${fg_root}/${YYYYMMDDHHmInterv}/fcst_fv3lam/RESTART  # cycling, use background from RESTART
+  bkpath=${fg_root}/${YYYYMMDDHHmInterv}/${fcst_dir_name}/RESTART  # cycling, use background from RESTART
 
 #   let us figure out which backgound is available
 #
@@ -137,8 +167,8 @@ else
     else
       n=$((n + ${DA_CYCLE_INTERV}))
       YYYYMMDDHHmInterv=$( date +%Y%m%d%H -d "${START_DATE} ${n} hours ago" )
-      bkpath=${fg_root}/${YYYYMMDDHHmInterv}/fcst_fv3lam/RESTART  # cycling, use background from RESTART
-      if [ ${n} -eq ${FCST_LEN_HRS} ]; then
+      bkpath=${fg_root}/${YYYYMMDDHHmInterv}/${fcst_dir_name}/RESTART  # cycling, use background from RESTART
+      if [ ${n} -eq ${FCST_LEN_HRS_SPINUP} ] && [ ${cycle_type} -eq 1 ]; then
         restart_prefix=""
       fi
       print_info_msg "$VERBOSE" "Trying this path: ${bkpath}"
@@ -154,7 +184,7 @@ else
     cp_vrfy ${bkpath}/${restart_prefix}fv_core.res.nc             fv_core.res.nc
     cp_vrfy ${bkpath}/${restart_prefix}fv_srf_wnd.res.tile1.nc    fv_srf_wnd.res.tile1.nc
     cp_vrfy ${bkpath}/${restart_prefix}phy_data.nc                phy_data.nc
-    cp_vrfy ${fg_root}/${YYYYMMDDHHmInterv}/fcst_fv3lam/INPUT/gfs_ctrl.nc  gfs_ctrl.nc
+    cp_vrfy ${fg_root}/${YYYYMMDDHHmInterv}/${fcst_dir_name}/INPUT/gfs_ctrl.nc  gfs_ctrl.nc
   else
     print_err_msg_exit "Error: cannot find background: ${checkfile}"
   fi
@@ -187,6 +217,9 @@ else
   else
      FCST_LEN_HRS_thiscycle=${FCST_LEN_HRS}
   fi
+  if [ ${cycle_type} -eq 1 ]; then
+     FCST_LEN_HRS_thiscycle=${FCST_LEN_HRS_SPINUP}
+  fi 
   print_info_msg "$VERBOSE" " The forecast length for cycle (\"${HH}\") is
                  ( \"${FCST_LEN_HRS_thiscycle}\") "
 
