@@ -188,6 +188,7 @@ settings="\
   'get_extrn_lbcs_long_tn': ${GET_EXTRN_LBCS_LONG_TN}
   'make_ics_tn': ${MAKE_ICS_TN}
   'make_lbcs_tn': ${MAKE_LBCS_TN}
+  'run_spinup': ${RUN_SPINUP_TN}
   'run_fcst_tn': ${RUN_FCST_TN}
   'run_post_tn': ${RUN_POST_TN}
   'anal_gsi': ${ANAL_GSI_TN}
@@ -338,6 +339,7 @@ settings="\
   'cycl_freq': !!str 12:00:00
   'at_start_cycledef': ${AT_START_CYCLEDEF}
   'initial_cycledef': ${INITIAL_CYCLEDEF}
+  'spinup_cycledef': ${SPINUP_CYCLEDEF}
   'boundary_cycledef': ${BOUNDARY_CYCLEDEF}
   'boundary_long_cycledef': ${BOUNDARY_LONG_CYCLEDEF}
   'spinup_cycledef': ${SPINUP_CYCLEDEF}

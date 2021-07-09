@@ -64,6 +64,7 @@ valid_args=( \
 "fhr" \
 "tmmark" \
 )
+#echo $tmmark
 process_args valid_args "$@"
 #
 #-----------------------------------------------------------------------
