@@ -82,8 +82,6 @@ case $MACHINE in
   module list
   ulimit -s unlimited
   ulimit -a
-# APRUN="mpirun -l -np 284"
-# APRUN="mpirun -l -np 320"
   APRUN="mpirun -l -np ${PE_MEMBER01}"
   ;;
 #
@@ -93,8 +91,6 @@ case $MACHINE in
   module list
   ulimit -s unlimited
   ulimit -a
-# APRUN="mpirun -l -np 320"
-# APRUN="mpirun -l -np 284"
   APRUN="mpirun -l -np ${PE_MEMBER01}"
   ;;
 #
@@ -289,7 +285,6 @@ if [[ ${nummem} -eq 80 ]]; then
   ifhyb=.true.
   print_info_msg "$VERBOSE" " Cycle ${YYYYMMDDHH}: GSI hybrid uses ${memname} with n_ens=${nummem}" 
 fi
-#ifhyb=.false.
 
 #
 #-----------------------------------------------------------------------

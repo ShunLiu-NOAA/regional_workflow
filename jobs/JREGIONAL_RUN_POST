@@ -94,7 +94,6 @@ if [ "${RUN_ENVIR}" = "nco" ]; then
   mkdir_vrfy -p "${COMOUT}"
 fi
 
-#postprd_dir="${CYCLE_DIR}${SLASH_ENSMEM_SUBDIR}/postprd/${TMMARK}"
 postprd_dir="${CYCLE_DIR}${SLASH_ENSMEM_SUBDIR}/postprd"
 if [ ${CYCLE_TYPE} -eq 1 ]; then
   postprd_dir="${CYCLE_DIR}/postprd_spinup"
@@ -128,7 +127,6 @@ fi
 #
 #-----------------------------------------------------------------------
 #
-echo "TMMARK", ${TMMARK}
 $SCRIPTSDIR/exregional_run_post.sh \
   cdate="${CDATE}" \
   run_dir="${run_dir}" \
