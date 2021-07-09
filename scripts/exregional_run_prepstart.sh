@@ -116,7 +116,7 @@ else
   echo " product cycle"
   for cyc_start in ${CYCL_HRS_PRODSTART[@]}; do
     if [ ${HH} -eq ${cyc_start} ]; then
-      if [ ${DO_SPINUP} -eq "true" ]; then
+      if [ ${DO_SPINUP} == "true" ]; then
         BKTYPE=2   # using 1-h from spinup cycle
       else
         BKTYPE=1

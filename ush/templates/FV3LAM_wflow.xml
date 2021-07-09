@@ -558,6 +558,28 @@ MODULES_RUN_TASK_FP script.
              <streq><left>{{ h }}</left><right><cyclestr>@H</cyclestr></right></streq>
              {%- endfor %}
            </or>
+{%- if do_spinup %}
+
+<!-- for start from spin up cycle  -->
+{%- if do_retro %}
+           <datadep age="00:00:05:00"><cyclestr offset="-{{ da_cycle_interval_hrs }}:00:00">&FG_ROOT;/@Y@m@d@H/fcst_fv3lam_spinup/dynf00{{ da_cycle_interval_hrs }}.nc</cyclestr></datadep>
+{% else %}
+           <or>
+             <datadep age="00:00:05:00"><cyclestr offset="-{{ da_cycle_interval_hrs }}:00:00">&FG_ROOT;/@Y@m@d@H/fcst_fv3lam_spinup/dynf00{{ da_cycle_interval_hrs }}.nc</cyclestr></datadep>
+             <and>
+               <timedep><cyclestr offset="&START_TIME_ANALYSIS;">@Y@m@d@H@M00</cyclestr></timedep>
+               <or>
+                 {%- for h in range(da_cycle_interval_hrs, 6+1, da_cycle_interval_hrs) %}
+                 <datadep age="00:00:05:00"><cyclestr offset="-{{ h }}:00:00">&FG_ROOT;/@Y@m@d@H/fcst_fv3lam/dynf{{ "%03d" % h}}.nc</cyclestr></datadep>
+                 {%- endfor %}
+               </or>
+             </and>
+           </or>
+{%- endif %}
+
+{% else %}
+
+<!-- for start from cold start  -->
 {%- if do_retro %}
            <datadep age="00:00:05:00"><cyclestr>&FG_ROOT;/@Y@m@d@H/ics/gfs_data.tile7.halo0.nc</cyclestr></datadep>
 {% else %}
@@ -569,7 +591,10 @@ MODULES_RUN_TASK_FP script.
              {%- endif %}
            </and>
 {%- endif %}
+
+{%- endif %}
          </and>
+
 <!-- for continue product cycles  -->
          <and>
            <or>
