@@ -194,6 +194,7 @@ settings="\
   'prep_start': ${PREP_START_TN}
   'prep_cyc_spinup': ${PREP_CYC_SPINUP_TN}
   'prep_cyc_prod': ${PREP_CYC_PROD_TN}
+  'prep_cyc': ${PREP_CYC_TN}
   'process_radarref': ${PROCESS_RADAR_REF_TN}
   'process_lightning': ${PROCESS_LIGHTNING_TN}
   'process_bufr': ${PROCESS_BUFR_TN}

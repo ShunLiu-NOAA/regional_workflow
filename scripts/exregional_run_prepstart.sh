@@ -105,7 +105,7 @@ YYYYMMDD=${YYYYMMDDHH:0:8}
 #-----------------------------------------------------------------------
 
 BKTYPE=0
-if [ ${cycle_type} -eq 1 ]; then
+if [ ${cycle_type} == "spinup" ]; then
    echo "spin up cycle"
   for cyc_start in ${CYCL_HRS_SPINSTART[@]}; do
     if [ ${HH} -eq ${cyc_start} ]; then
@@ -140,7 +140,7 @@ if [ ${BKTYPE} -eq 1 ] ; then  # cold start, use prepare cold strat initial file
     fi
 else
 
-  if [ ${cycle_type} -eq 1 ]; then
+  if [ ${cycle_type} == "spinup" ]; then
      fcst_dir_name=fcst_fv3lam_spinup
   else
      fcst_dir_name=fcst_fv3lam
@@ -168,7 +168,7 @@ else
       n=$((n + ${DA_CYCLE_INTERV}))
       YYYYMMDDHHmInterv=$( date +%Y%m%d%H -d "${START_DATE} ${n} hours ago" )
       bkpath=${fg_root}/${YYYYMMDDHHmInterv}/${fcst_dir_name}/RESTART  # cycling, use background from RESTART
-      if [ ${n} -eq ${FCST_LEN_HRS_SPINUP} ] && [ ${cycle_type} -eq 1 ]; then
+      if [ ${n} -eq ${FCST_LEN_HRS_SPINUP} ] && [ ${cycle_type} == "spinup" ]; then
         restart_prefix=""
       fi
       print_info_msg "$VERBOSE" "Trying this path: ${bkpath}"
@@ -217,7 +217,7 @@ else
   else
      FCST_LEN_HRS_thiscycle=${FCST_LEN_HRS}
   fi
-  if [ ${cycle_type} -eq 1 ]; then
+  if [ ${cycle_type} == "spinup" ]; then
      FCST_LEN_HRS_thiscycle=${FCST_LEN_HRS_SPINUP}
   fi 
   print_info_msg "$VERBOSE" " The forecast length for cycle (\"${HH}\") is

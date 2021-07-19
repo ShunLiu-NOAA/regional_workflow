@@ -60,8 +60,8 @@ the specified cycle.
 #
 #-----------------------------------------------------------------------
 #
-CYCLE_TYPE=${CYCLE_TYPE:-0}
-if [ ${CYCLE_TYPE} -eq 1 ]; then
+CYCLE_TYPE=${CYCLE_TYPE:-prod}
+if [ ${CYCLE_TYPE} == "spinup" ]; then
   analworkdir="${CYCLE_DIR}/anal_gsi_spinup"
 else
   analworkdir="${CYCLE_DIR}/anal_gsi"

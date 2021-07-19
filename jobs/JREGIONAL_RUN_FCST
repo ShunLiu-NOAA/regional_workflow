@@ -62,8 +62,8 @@ the specified cycle.
 #
 #-----------------------------------------------------------------------
 #
-CYCLE_TYPE=${CYCLE_TYPE:-0}
-if [ ${CYCLE_TYPE} -eq 1 ]; then
+CYCLE_TYPE=${CYCLE_TYPE:-prod}
+if [ ${CYCLE_TYPE} == "spinup" ]; then
   run_dir="${CYCLE_DIR}/fcst_fv3lam_spinup"
 else
   run_dir="${CYCLE_DIR}/fcst_fv3lam${SLASH_ENSMEM_SUBDIR}"
