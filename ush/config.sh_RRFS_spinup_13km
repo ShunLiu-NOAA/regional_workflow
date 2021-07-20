@@ -2,7 +2,7 @@ MACHINE="WCOSS_DELL_P3"
 ACCOUNT="HRRR-T2O"
 #RESERVATION="rrfsdet"
 EXPT_BASEDIR="/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs_test"
-EXPT_SUBDIR="working2"
+EXPT_SUBDIR="working4"
 
 if [[ -n $RESERVATION ]] ; then
   ACCOUNT=rtrr
@@ -52,12 +52,14 @@ DATE_LAST_CYCL="20210609"
 CYCL_HRS=( "00" "06" "12" "18" )
 CYCLEMONTH="5-7"
 
-BDY_START_CYCL="202106270000"
-BDY_END_CYCL="202106280000"
-SPINUP_START_CYCL="202106271500"
-SPINUP_END_CYCL="202106271800"
-PROD_START_CYCL="202106271800"
-PROD_END_CYCL="202106280000"
+BDY_START_CYCL="202107040000"
+BDY_END_CYCL="202107050000"
+INITIAL_START_CYCL="202107041500"
+INITIAL_END_CYCL="202107041500"
+SPINUP_START_CYCL="202107041500"
+SPINUP_END_CYCL="202107041800"
+PROD_START_CYCL="202107041800"
+PROD_END_CYCL="202107050000"
 
 # <cycledef group="spinupcyc"> {{ initial_cycledef }} </cycledef>
 # <cycledef group="prodcyc"> {{ boundary_cycledef }} </cycledef>
@@ -67,7 +69,8 @@ PROD_END_CYCL="202106280000"
 
 if [[ $DO_SPINUP == "true" ]] ; then
   BOUNDARY_CYCLEDEF="${BDY_START_CYCL} ${BDY_END_CYCL} 06:00:00"
-  INITIAL_CYCLEDEF="${SPINUP_START_CYCL} ${SPINUP_END_CYCL} 12:00:00"
+  INITIAL_CYCLEDEF="${INITIAL_START_CYCL} ${INITIAL_END_CYCL} 12:00:00"
+  SPINUP_CYCLEDEF="${SPINUP_START_CYCL} ${SPINUP_END_CYCL} 01:00:00"
   PREP_COLDSTART_CYCLEDEF="${PROD_START_CYCL} ${PROD_END_CYCL} 01:00:00"
   echo "do spinup"
 fi
@@ -116,7 +119,7 @@ ENKF_FCST="/gpfs/dell1/nco/ops/com/gfs/prod"
 #ARCHIVEDIR="/5year/BMC/wrfruc/rrfs_na_13km_dev1"
 #
 USE_CUSTOM_POST_CONFIG_FILE="TRUE"
-CUSTOM_POST_CONFIG_FP="/gpfs/hps3/emc/meso/save/Ming.Hu/rrfs/ufs-srweather-app/src/EMC_post/parm/postxconfig-NT-fv3lam_rrfs.txt"
+CUSTOM_POST_CONFIG_FP="/gpfs/hps3/emc/meso/save/Ming.Hu/rrfs/ufs-srweather-app_dev1/src/EMC_post/parm/postxconfig-NT-fv3lam_rrfs.txt"
 ARCHIVEDIR="/5year/BMC/wrfruc/rrfs_na_13km_dev1"
 
 NCARG_ROOT="/apps/ncl/6.5.0-CentOS6.10_64bit_nodap_gnu447"
@@ -134,7 +137,7 @@ MODEL="RRFS_NA_13km"
 #RUN_TASK_MAKE_SFC_CLIMO="FALSE"
 
 #RUN="RRFS_NA_13km_dev1"
-RUN="RRFS_working2"
+RUN="RRFS_working4"
 COMINgfs=""
 
 STMP="/gpfs/dell1/ptmp/Shun.Liu/stmp"  # Path to directory STMP that mostly contains input files.
