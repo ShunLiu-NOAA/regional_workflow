@@ -425,7 +425,7 @@ WFLOW_LAUNCH_LOG_FN="log.launch_FV3LAM_wflow"
 # The length of each forecast, in integer hours.
 #
 # FCST_LEN_HRS_SPINUP:
-# The length of each forecastn in spin up cycles, in integer hours.
+# The length of each forecast in spin up cycles, in integer hours.
 #
 # FCST_LEN_HRS_CYCLES:
 # The length of forecast for each cycle, in integer hours.
@@ -1669,16 +1669,12 @@ DO_DACYCLE="FALSE"
 # DO_SPINUP:
 # Flag turn on the spin-up cycle.
 #
-# DO_CYCLE_SURFACE:
-# Flag turn on cycling the surface when cold start from outside model.
-#
 # LBCS_ICS_ONLY:
 # Flag turn on the runs prepare boundary and cold start initial conditions in
 #      retrospective experiments.
 #
 DO_RETRO="FALSE"
 DO_SPINUP="FALSE"
-DO_CYCLE_SURFACE="FALSE"
 LBCS_ICS_ONLY="FALSE"
 #
 #-----------------------------------------------------------------------

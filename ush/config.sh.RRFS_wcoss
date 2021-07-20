@@ -1,7 +1,11 @@
+########################################
+# configues for WCOSS_DELL_P3
+########################################
+ 
 MACHINE="WCOSS_DELL_P3"
-ACCOUNT="nrtrr"
+ACCOUNT="HRRR-T2O"
 #RESERVATION="rrfsdet"
-EXPT_BASEDIR="/gpfs/hps3/emc/meso/save/Ming.Hu/rrfs/na13km"
+EXPT_BASEDIR="/gpfs/hps3/emc/meso/save/First.Last/rrfs/na13km"
 EXPT_SUBDIR="RRFS_NA_13km_dev1_spinup"
 
 if [[ -n $RESERVATION ]] ; then
@@ -206,8 +210,8 @@ MODEL="RRFS_NA_13km"
 RUN="RRFS_NA_13km_dev1_spinup"
 COMINgfs=""
 
-STMP="/gpfs/hps3/ptmp/Ming.Hu/stmp"  # Path to directory STMP that mostly contains input files.
-PTMP="/gpfs/hps3/ptmp/Ming.Hu/ptmp"  # Path to directory STMP that mostly contains input files.
+STMP="/gpfs/hps3/ptmp/First.Last/stmp"  # Path to directory STMP that mostly contains input files.
+PTMP="/gpfs/hps3/ptmp/First.Last/ptmp"  # Path to directory STMP that mostly contains input files.
 
 if [[ $DO_RETRO == "true" ]] ; then
   CLEAN_OLDPROD_HRS="240"
