@@ -98,7 +98,7 @@ YYYYMMDD=${YYYYMMDDHH:0:8}
 # prepare initial conditions for 
 #     cold start if BKTYPE=1 
 #     warm start if BKTYPE=0
-#     spinupcyc + warm start if BKTYPE=0
+#     spinupcyc + warm start if BKTYPE=2
 #       the previous 6 cycles are searched to find the restart files
 #       valid at this time from the closet previous cycle.
 #
@@ -117,7 +117,7 @@ else
   for cyc_start in ${CYCL_HRS_PRODSTART[@]}; do
     if [ ${HH} -eq ${cyc_start} ]; then
       if [ ${DO_SPINUP} == "true" ]; then
-        BKTYPE=2   # using 1-h from spinup cycle
+        BKTYPE=2   # using 1-h forecast from spinup cycle
       else
         BKTYPE=1
       fi
@@ -140,16 +140,17 @@ if [ ${BKTYPE} -eq 1 ] ; then  # cold start, use prepare cold strat initial file
     fi
 else
 
-  if [ ${cycle_type} == "spinup" ]; then
-     fcst_dir_name=fcst_fv3lam_spinup
+# background directory: 
+#    1. warm start from spinup cycle in product cycle. 
+#    2. warm start in spinup cycle. 
+  if [ ${cycle_type} == "spinup" ] || [ ${BKTYPE} -eq 2 ]; then
+     fg_restart_dirname=fcst_fv3lam_spinup
   else
-     fcst_dir_name=fcst_fv3lam
+     fg_restart_dirname=fcst_fv3lam
   fi
-  if [ ${BKTYPE} -eq 2 ]; then
-     fcst_dir_name=fcst_fv3lam_spinup
-  fi
+
   YYYYMMDDHHmInterv=$( date +%Y%m%d%H -d "${START_DATE} ${DA_CYCLE_INTERV} hours ago" )
-  bkpath=${fg_root}/${YYYYMMDDHHmInterv}/${fcst_dir_name}/RESTART  # cycling, use background from RESTART
+  bkpath=${fg_root}/${YYYYMMDDHHmInterv}/${fg_restart_dirname}/RESTART  # cycling, use background from RESTART
 
 #   let us figure out which backgound is available
 #
@@ -167,7 +168,7 @@ else
     else
       n=$((n + ${DA_CYCLE_INTERV}))
       YYYYMMDDHHmInterv=$( date +%Y%m%d%H -d "${START_DATE} ${n} hours ago" )
-      bkpath=${fg_root}/${YYYYMMDDHHmInterv}/${fcst_dir_name}/RESTART  # cycling, use background from RESTART
+      bkpath=${fg_root}/${YYYYMMDDHHmInterv}/${fg_restart_dirname}/RESTART  # cycling, use background from RESTART
       if [ ${n} -eq ${FCST_LEN_HRS_SPINUP} ] && [ ${cycle_type} == "spinup" ]; then
         restart_prefix=""
       fi
@@ -184,7 +185,7 @@ else
     cp_vrfy ${bkpath}/${restart_prefix}fv_core.res.nc             fv_core.res.nc
     cp_vrfy ${bkpath}/${restart_prefix}fv_srf_wnd.res.tile1.nc    fv_srf_wnd.res.tile1.nc
     cp_vrfy ${bkpath}/${restart_prefix}phy_data.nc                phy_data.nc
-    cp_vrfy ${fg_root}/${YYYYMMDDHHmInterv}/${fcst_dir_name}/INPUT/gfs_ctrl.nc  gfs_ctrl.nc
+    cp_vrfy ${fg_root}/${YYYYMMDDHHmInterv}/${fg_restart_dirname}/INPUT/gfs_ctrl.nc  gfs_ctrl.nc
   else
     print_err_msg_exit "Error: cannot find background: ${checkfile}"
   fi
