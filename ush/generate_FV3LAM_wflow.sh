@@ -370,7 +370,6 @@ settings="\
   'da_cycle_interval_hrs': ${DA_CYCLE_INTERV}
   'do_nonvar_cldanal': ${DO_NONVAR_CLDANAL}
   'do_refl2tten': ${DO_REFL2TTEN}
-  'do_cycle_surface': ${DO_CYCLE_SURFACE}
   'do_spinup': ${DO_SPINUP}
 #
 # graphics related parameters
