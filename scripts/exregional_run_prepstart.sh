@@ -140,9 +140,13 @@ if [ ${BKTYPE} -eq 1 ] ; then  # cold start, use prepare cold strat initial file
     fi
 else
 
-# background directory: 
-#    1. warm start from spinup cycle in product cycle. 
-#    2. warm start in spinup cycle. 
+# Setup the INPUT directory for warm start cycles, which can be spin-up cycle or product cycle.
+#
+# First decide the source of the first guess (fg_restart_dirname) depending on cycle_type and BKTYPE:
+#  1. If cycle is spinup cycle (cycle_type == spinup) or it is the product start cycle (BKTYPE==2),
+#             looking for the first guess from spinup forecast (fcst_fv3lam_spinup)
+#  2. Others, looking for the first guess from product forecast (fcst_fv3lam)
+#
   if [ ${cycle_type} == "spinup" ] || [ ${BKTYPE} -eq 2 ]; then
      fg_restart_dirname=fcst_fv3lam_spinup
   else
