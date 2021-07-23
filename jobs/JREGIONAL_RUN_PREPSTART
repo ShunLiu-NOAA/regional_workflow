@@ -62,6 +62,10 @@ the specified cycle.
 #
 #-----------------------------------------------------------------------
 #
+# CYCLE_TYPE is to indicate which type of cycle this job for:
+#   spinup: this job is for spin-up cycles
+#   others(prod): this job is for product cycle
+#
 CYCLE_TYPE=${CYCLE_TYPE:-prod}
 if [ ${CYCLE_TYPE} == "spinup" ]; then
   modelinputdir=${CYCLE_DIR}/fcst_fv3lam_spinup/INPUT

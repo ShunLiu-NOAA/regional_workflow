@@ -61,6 +61,9 @@ the specified cycle.
 # Create the INPUT and RESTART directories under the run directory.
 #
 #-----------------------------------------------------------------------
+# CYCLE_TYPE is to indicate which type of cycle this job for:
+#   spinup: this job is for spin-up cycles
+#   others(prod): this job is for product cycle
 #
 CYCLE_TYPE=${CYCLE_TYPE:-prod}
 if [ ${CYCLE_TYPE} == "spinup" ]; then
