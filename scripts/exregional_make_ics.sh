@@ -531,6 +531,7 @@ fi
 # It turns out that setting the variable to an empty string also works
 # to remove it from the namelist!  Which is better to use??
 #
+#'vcoord_file_target_grid': ${FIXLAM}/global_hyblev.l66.txt,
 #'vcoord_file_target_grid': ${FIXam}/L65_20mb.txt,
 settings="
 'config': {
@@ -616,6 +617,10 @@ located in the following directory:
 #
 #-----------------------------------------------------------------------
 #
+# add phis to cold start file
+Fix_temp=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs/fix/fix_temp
+ncks -A -v phis $Fix_temp/fv3_dynvars out.atm.tile?.nc
+
 mv_vrfy out.atm.tile${TILE_RGNL}.nc \
         ${ics_dir}/gfs_data.tile${TILE_RGNL}.halo${NH0}.nc
 
