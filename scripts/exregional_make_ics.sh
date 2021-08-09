@@ -618,8 +618,8 @@ located in the following directory:
 #-----------------------------------------------------------------------
 #
 # add phis to cold start file
-Fix_temp=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs/fix/fix_temp
-ncks -A -v phis $Fix_temp/fv3_dynvars out.atm.tile?.nc
+#Fix_temp=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs/fix/fix_temp
+#ncks -A -v phis $Fix_temp/fv3_dynvars out.atm.tile?.nc
 
 mv_vrfy out.atm.tile${TILE_RGNL}.nc \
         ${ics_dir}/gfs_data.tile${TILE_RGNL}.halo${NH0}.nc
