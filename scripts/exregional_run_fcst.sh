@@ -565,6 +565,7 @@ $yr $mn $dy $hr 0 0
   ${APRUN} $EXECfv3/regional_forecast.x >pgmout 2>err
   export err=$?
 # export err=$?;err_chk
+  exit
   
   # copy GRIB2 files
   domain=conus
