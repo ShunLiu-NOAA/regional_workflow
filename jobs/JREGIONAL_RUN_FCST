@@ -55,6 +55,7 @@ In directory:     \"${scrfunc_dir}\"
 This is the J-job script for the task that runs a forecast with FV3 for 
 the specified cycle.
 ========================================================================"
+set -x
 #
 #-----------------------------------------------------------------------
 #
