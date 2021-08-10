@@ -405,7 +405,7 @@ case "${EXTRN_MDL_NAME_ICS}" in
     convert_nst=False
     if [ "$MACHINE" == "WCOSS_DELL_P3" ]; then
       fn_atm_nemsio="${EXTRN_MDL_FNS[0]}"
-      fn_sfc_nemsio="${EXTRN_MDL_FNS[1]}"
+      #fn_sfc_nemsio="${EXTRN_MDL_FNS[1]}"
     fi
   elif [ "${FV3GFS_FILE_FMT_ICS}" = "netcdf" ]; then
     tracers_input="[\"spfh\",\"clwmr\",\"o3mr\",\"icmr\",\"rwmr\",\"snmr\",\"grle\"]"
@@ -538,7 +538,7 @@ settings="
  'mosaic_file_target_grid': ${FIXLAM}/${CRES}${DOT_OR_USCORE}mosaic.halo$((10#${NH4})).nc,
  'orog_dir_target_grid': ${FIXLAM},
  'orog_files_target_grid': ${CRES}${DOT_OR_USCORE}oro_data.tile${TILE_RGNL}.halo$((10#${NH4})).nc,
- 'vcoord_file_target_grid': ${FIXam}/global_hyblev_fcst_rrfsL65.txt,
+ 'vcoord_file_target_grid': ${FIXam}/L65_20mb.txt,
  'varmap_file': ${UFS_UTILS_DIR}/parm/varmap_tables/${varmap_file},
  'data_dir_input_grid': ${extrn_mdl_staging_dir},
  'atm_files_input_grid': ${fn_atm_nemsio},
