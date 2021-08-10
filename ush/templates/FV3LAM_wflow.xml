@@ -564,17 +564,12 @@ MODULES_RUN_TASK_FP script.
            </or>
 {%- if do_retro %}
            <datadep age="00:00:05:00"><cyclestr>&FG_ROOT;/@Y@m@d@H/ics/gfs_data.tile7.halo0.nc</cyclestr></datadep>
-<<<<<<< HEAD
-=======
            <taskdep task="&MAKE_ICS_TN;"/>
            <taskdep task="&MAKE_LBCS_TN;" cycle_offset="-{{ extrn_mdl_ics_offset_hrs }}:00:00"/>
->>>>>>> GSL/feature/RRFS_dev1
 {% else %}
            <and>
              <timedep><cyclestr offset="&START_TIME_CONVENTIONAL;">@Y@m@d@H@M00</cyclestr></timedep>
              <taskdep task="&MAKE_ICS_TN;"/>
-<<<<<<< HEAD
-=======
              <taskdep task="&MAKE_LBCS_TN;" cycle_offset="-{{ extrn_mdl_ics_offset_hrs }}:00:00"/>
 >>>>>>> GSL/feature/RRFS_dev1
            </and>
@@ -672,13 +667,8 @@ MODULES_RUN_TASK_FP script.
              <taskdep task="&MAKE_LBCS_TN;"/>
              {%- endif %}
            </and>
-<<<<<<< HEAD
 {%- endif %}
 {%- endif %}
-=======
-{%- endif %}
-{%- endif %}
->>>>>>> GSL/feature/RRFS_dev1
          </and>
 <!-- for continue product cycles  -->
          <and>
@@ -1144,8 +1134,6 @@ MODULES_RUN_TASK_FP script.
 
     </task>
 
-<<<<<<< HEAD
-=======
     <task name="&RUN_WGRIB2_TN;_spinup_f#fhr#" cycledefs="spinupcyc" maxtries="{{ maxtries_run_wgrib2 }}">
 
       &RSRV_DEFAULT;
@@ -1174,7 +1162,6 @@ MODULES_RUN_TASK_FP script.
 
     </task>
 
->>>>>>> GSL/feature/RRFS_dev1
   </metatask>
 
 <!--
