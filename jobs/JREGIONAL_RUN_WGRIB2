@@ -3,10 +3,12 @@
 #
 #-----------------------------------------------------------------------
 #
-# This J-JOB script runs the GSI analysis 
-#      for the FV3-LAM model
+# This script runs wgrib2 to create various subdomain GRIB2 files from
+# the raw UPP-generated GRIB2 output from the run_post task of the
+# FV3-LAM model.
 #
 #-----------------------------------------------------------------------
+#
 
 #
 #-----------------------------------------------------------------------
@@ -25,7 +27,7 @@
 #
 #-----------------------------------------------------------------------
 #
-{ save_shell_opts; set -u +x; } > /dev/null 2>&1
+{ save_shell_opts; set -u -x; } > /dev/null 2>&1
 #
 #-----------------------------------------------------------------------
 #
@@ -50,30 +52,77 @@ print_info_msg "
 Entering script:  \"${scrfunc_fn}\"
 In directory:     \"${scrfunc_dir}\"
 
-This is the J-job script for the task that runs a analysis with FV3 for 
-the specified cycle.
+This is the J-job script for the task that runs wgrib2 on the output
+files corresponding to a specified forecast hour.
 ========================================================================"
 #
 #-----------------------------------------------------------------------
 #
-# Create the working directory under the cycle directory.
+# Set the run directory.
 #
 #-----------------------------------------------------------------------
-<<<<<<< HEAD
-=======
 # CYCLE_TYPE is to indicate which type of cycle this job for:
 #   spinup: this job is for spin-up cycles
 #   others(prod): this job is for product cycle
->>>>>>> GSL/feature/RRFS_dev1
 #
 CYCLE_TYPE=${CYCLE_TYPE:-prod}
 if [ ${CYCLE_TYPE} == "spinup" ]; then
-  analworkdir="${CYCLE_DIR}/anal_gsi_spinup"
+  run_dir="${CYCLE_DIR}/fcst_fv3lam_spinup"
 else
-  analworkdir="${CYCLE_DIR}/anal_gsi"
+  run_dir="${CYCLE_DIR}/fcst_fv3lam${SLASH_ENSMEM_SUBDIR}"
 fi
-rm -fr ${analworkdir}
-mkdir_vrfy -p ${analworkdir}
+
+#
+#-----------------------------------------------------------------------
+#
+# If it doesn't already exist, create the directory (postprd_dir) in which 
+# to store post-processing output.  (Note that postprd_dir may already 
+# have been created by this post-processing script run for a different 
+# forecast hour of the same cycle and/or ensemble member.)  Also, create 
+# a temporary work directory (fhr_dir) for the current forecast hour.  
+# fhr_dir will be deleted later after the processing for the current 
+# forecast hour is complete.  Then change location to fhr_dir.
+#
+# Note that there may be a preexisting version of fhr_dir from previous 
+# runs of this script for the current forecast hour (and current cycle), 
+# e.g. from the workflow task that runs this script failing and then being 
+# called again.  Thus, we first make sure preexisting versions are deleted.
+#
+#-----------------------------------------------------------------------
+#
+if [ "${RUN_ENVIR}" = "nco" ]; then
+  COMOUT="${COMOUT_BASEDIR}/$RUN.$PDY/$cyc${SLASH_ENSMEM_SUBDIR}"
+  if [ ${CYCLE_TYPE} == "spinup" ]; then
+    COMOUT="${COMOUT_BASEDIR}/$RUN.$PDY/${cyc}_spinup"
+  fi
+  mkdir_vrfy -p "${COMOUT}"
+fi
+
+postprd_dir="${CYCLE_DIR}${SLASH_ENSMEM_SUBDIR}/postprd"
+if [ ${CYCLE_TYPE} == "spinup" ]; then
+  postprd_dir="${CYCLE_DIR}/postprd_spinup"
+fi
+mkdir_vrfy -p "${postprd_dir}"
+
+fhr_dir="${postprd_dir}/$fhr"
+check_for_preexist_dir_file "${fhr_dir}" "delete"
+mkdir_vrfy -p "${fhr_dir}"
+
+cd_vrfy "${fhr_dir}"
+#
+#-----------------------------------------------------------------------
+#
+# Make sure that fhr is a non-empty string consisting of only digits.  
+#
+#-----------------------------------------------------------------------
+#
+fhr=$( printf "%s" "${fhr}" | sed -n -r -e "s/^([0-9]+)$/\1/p" )
+if [ -z "$fhr" ]; then
+  print_err_msg_exit "\
+The forecast hour (fhr) must be a non-empty string consisting of only 
+digits:
+  fhr = \"${fhr}\""
+fi
 #
 #-----------------------------------------------------------------------
 #
@@ -82,10 +131,14 @@ mkdir_vrfy -p ${analworkdir}
 #
 #-----------------------------------------------------------------------
 #
-$SCRIPTSDIR/exregional_run_analysis.sh \
-             cycle_dir="${CYCLE_DIR}" \
-             cycle_type="${CYCLE_TYPE}" \
-             analworkdir="${analworkdir}" || \
+$SCRIPTSDIR/exregional_run_wgrib2.sh \
+  cdate="${CDATE}" \
+  run_dir="${run_dir}" \
+  postprd_dir="${postprd_dir}" \
+  comout="${COMOUT}" \
+  fhr_dir="${fhr_dir}" \
+  fhr="${fhr}" \
+  tmmark="${TMMARK}" || \
 print_err_msg_exit "\
 Call to ex-script corresponding to J-job \"${scrfunc_fn}\" failed."
 #

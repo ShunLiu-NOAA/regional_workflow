@@ -107,14 +107,22 @@ YYYYMMDD=${YYYYMMDDHH:0:8}
 BKTYPE=0
 if [ ${cycle_type} == "spinup" ]; then
    echo "spin up cycle"
+<<<<<<< HEAD
   for cyc_start in ${CYCL_HRS_SPINSTART[@]}; do
+=======
+  for cyc_start in "${CYCL_HRS_SPINSTART[@]}"; do
+>>>>>>> GSL/feature/RRFS_dev1
     if [ ${HH} -eq ${cyc_start} ]; then
       BKTYPE=1
     fi
   done
 else
   echo " product cycle"
+<<<<<<< HEAD
   for cyc_start in ${CYCL_HRS_PRODSTART[@]}; do
+=======
+  for cyc_start in "${CYCL_HRS_PRODSTART[@]}"; do
+>>>>>>> GSL/feature/RRFS_dev1
     if [ ${HH} -eq ${cyc_start} ]; then
       if [ ${DO_SPINUP} == "true" ]; then
         BKTYPE=2   # using 1-h forecast from spinup cycle
@@ -166,7 +174,8 @@ else
   n=${DA_CYCLE_INTERV}
   while [[ $n -le 6 ]] ; do
     checkfile=${bkpath}/${restart_prefix}fv_core.res.tile1.nc
-    if [ -r "${checkfile}" ]; then
+    checkfile1=${bkpath}/${restart_prefix}fv_tracer.res.tile1.nc
+    if [ -r "${checkfile}" ] && [ -r "${checkfile1}" ]; then
       print_info_msg "$VERBOSE" "Found ${checkfile}; Use it as background for analysis "
       break
     else
@@ -174,6 +183,12 @@ else
       YYYYMMDDHHmInterv=$( date +%Y%m%d%H -d "${START_DATE} ${n} hours ago" )
       bkpath=${fg_root}/${YYYYMMDDHHmInterv}/${fg_restart_dirname}/RESTART  # cycling, use background from RESTART
       if [ ${n} -eq ${FCST_LEN_HRS_SPINUP} ] && [ ${cycle_type} == "spinup" ]; then
+<<<<<<< HEAD
+=======
+        restart_prefix=""
+      fi
+      if [ ${n} -eq ${FCST_LEN_HRS} ] && [ ${cycle_type} == "prod" ] ; then
+>>>>>>> GSL/feature/RRFS_dev1
         restart_prefix=""
       fi
       print_info_msg "$VERBOSE" "Trying this path: ${bkpath}"
@@ -181,7 +196,8 @@ else
   done
 #
   checkfile=${bkpath}/${restart_prefix}fv_core.res.tile1.nc
-  if [ -r "${checkfile}" ]; then
+  checkfile1=${bkpath}/${restart_prefix}fv_tracer.res.tile1.nc
+  if [ -r "${checkfile}" ] && [ -r "${checkfile1}" ] ; then
     cp_vrfy ${bkpath}/${restart_prefix}fv_core.res.tile1.nc       fv_core.res.tile1.nc 
     cp_vrfy ${bkpath}/${restart_prefix}fv_tracer.res.tile1.nc     fv_tracer.res.tile1.nc
     cp_vrfy ${bkpath}/${restart_prefix}sfc_data.nc                sfc_data.nc 
