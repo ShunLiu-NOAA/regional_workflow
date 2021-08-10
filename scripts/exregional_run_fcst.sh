@@ -412,6 +412,7 @@ FV3_VER=EMC
 #-----------------------------------------------------------------------
 
 if [ "${FV3_VER}" == "EMC" ]; then
+  FIXam=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs/fix/fix_am_emc
   #---------------------------------------------- 
   # Copy all the necessary fix files
   #---------------------------------------------- 
