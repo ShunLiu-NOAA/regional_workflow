@@ -60,12 +60,9 @@ on the output files corresponding to a specified forecast hour.
 # Set the run directory.
 #
 #-----------------------------------------------------------------------
-<<<<<<< HEAD
-=======
 # CYCLE_TYPE is to indicate which type of cycle this job for:
 #   spinup: this job is for spin-up cycles
 #   others(prod): this job is for product cycle
->>>>>>> GSL/feature/RRFS_dev1
 #
 CYCLE_TYPE=${CYCLE_TYPE:-prod}
 if [ ${CYCLE_TYPE} == "spinup" ]; then
