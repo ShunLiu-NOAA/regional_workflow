@@ -499,6 +499,9 @@ hh="${EXTRN_MDL_CDATE:8:2}"
 #-----------------------------------------------------------------------
 #
 exec_fn="chgres_cube"
+
+#EMC version
+exec_fn="regional_chgres_cube.x"
 exec_fp="$EXECDIR/${exec_fn}"
 if [ ! -f "${exec_fp}" ]; then
   print_err_msg_exit "\
@@ -533,6 +536,49 @@ fi
 #
 #'vcoord_file_target_grid': ${FIXLAM}/global_hyblev.l66.txt,
 #'vcoord_file_target_grid': ${FIXam}/L65_20mb.txt,
+
+FV3_VER=EMC
+#-----------------------------------------------------------------------
+#  EMC version fix files
+#-----------------------------------------------------------------------
+
+if [ "${FV3_VER}" == "EMC" ]; then
+#
+# create namelist and run chgres_cube
+#
+CASE=${CRES}
+PARMfv3=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs/fix/parm
+LEVS=66
+echo shun $workdir
+cat <<EOF >${workdir}/fort.41
+&config
+ mosaic_file_target_grid="$FIXLAM/${CASE}_mosaic.nc"
+ fix_dir_target_grid="$FIXLAM"
+ orog_dir_target_grid="$FIXLAM"
+ orog_files_target_grid="${CASE}_oro_data.tile7.halo4.nc"
+ vcoord_file_target_grid="$PARMfv3/global_hyblev.l${LEVS}.txt"
+ mosaic_file_input_grid="NULL"
+ orog_dir_input_grid="NULL"
+ orog_files_input_grid="NULL"
+ data_dir_input_grid="${extrn_mdl_staging_dir}"
+ atm_files_input_grid="${fn_atm_nemsio}"
+ sfc_files_input_grid="${fn_sfc_nemsio}"
+ cycle_mon=$((10#${mm}))
+ cycle_day=$((10#${dd}))
+ cycle_hour=$((10#${hh}))
+ convert_atm=.true.
+ convert_sfc=.true.
+ convert_nst=.true.
+ input_type="gaussian_netcdf"
+ tracers="sphum","liq_wat","o3mr","ice_wat","rainwat","snowwat","graupel"
+ tracers_input="spfh","clwmr","o3mr","icmr","rwmr","snmr","grle"
+ regional=1
+ halo_bndy=4
+ halo_blend=10
+/
+EOF
+
+else
 settings="
 'config': {
  'fix_dir_input_grid': ${FIXgsm},
@@ -584,6 +630,7 @@ this script are:
   Namelist settings specified on command line (these have highest precedence):
     settings =
 $settings"
+fi
 #
 #-----------------------------------------------------------------------
 #
