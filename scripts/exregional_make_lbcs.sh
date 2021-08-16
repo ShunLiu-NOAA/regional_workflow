@@ -459,7 +459,52 @@ list file has not specified for this external LBC model (EXTRN_MDL_NAME_LBCS):
 #
 # It turns out that setting the variable to an empty string also works
 # to remove it from the namelist!  Which is better to use??
+# 
+#'vcoord_file_target_grid': ${FIXLAM}/global_hyblev.l66.txt,
+#'vcoord_file_target_grid': ${FIXam}/L65_20mb.txt,
+
+FV3_VER=EMC
+#-----------------------------------------------------------------------
+#  EMC version fix files
+#-----------------------------------------------------------------------
+
+if [ "${FV3_VER}" == "EMC" ]; then
 #
+# create namelist and run chgres_cube
+#
+CASE=${CRES}
+PARMfv3=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs/fix/parm
+LEVS=66
+echo shun $workdir
+cat <<EOF >${workdir}/fort.41
+&config
+ mosaic_file_target_grid="$FIXLAM/${CASE}_mosaic.nc"
+ fix_dir_target_grid="$FIXLAM"
+ orog_dir_target_grid="$FIXLAM"
+ orog_files_target_grid="${CASE}_oro_data.tile7.halo4.nc"
+ vcoord_file_target_grid="${PARMfv3}/global_hyblev.l${LEVS}.txt"
+ mosaic_file_input_grid="NULL"
+ orog_dir_input_grid="NULL"
+ orog_files_input_grid="NULL"
+ data_dir_input_grid="${extrn_mdl_staging_dir}"
+ atm_files_input_grid="${fn_atm_nemsio}"
+ sfc_files_input_grid="${fn_sfc_nemsio}"
+ grib2_file_input_grid="${fn_grib2}"
+ varmap_file="${PARMfv3}/${varmap_file}"
+ cycle_mon=$((10#${mm}))
+ cycle_day=$((10#${dd}))
+ cycle_hour=$((10#${hh}))
+ convert_atm=.true.
+ convert_sfc=.false.
+ convert_nst=.false.
+ input_type="grib2"
+ regional=2
+ halo_bndy=4
+ halo_blend=10
+/
+EOF
+
+else
 settings="
 'config': {
  'fix_dir_input_grid': ${FIXgsm},
@@ -501,6 +546,7 @@ this script are:
   Namelist settings specified on command line (these have highest precedence):
     settings =
 $settings"
+fi
 #
 #-----------------------------------------------------------------------
 #
