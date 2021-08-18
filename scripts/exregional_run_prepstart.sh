@@ -159,6 +159,9 @@ else
 #   So the defination of restart_prefix needs a "." at the end.
 #
   restart_prefix="${YYYYMMDD}.${HH}0000."
+
+# Shun add for EMC version
+  restart_prefix=""
   n=${DA_CYCLE_INTERV}
   while [[ $n -le 6 ]] ; do
     checkfile=${bkpath}/${restart_prefix}fv_core.res.tile1.nc
