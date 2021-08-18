@@ -91,7 +91,12 @@ case $MACHINE in
   module list
   ulimit -s unlimited
   ulimit -a
-  APRUN="mpirun -l -np ${PE_MEMBER01}"
+  #APRUN="mpirun -l -np ${PE_MEMBER01}"
+  #APRUN="mpirun -l -np 384"
+  HOMEfv3=/gpfs/dell6/emc/modeling/noscrub/emc.campara/fv3lamda/regional_workflow
+  module use ${HOMEfv3}/modulefiles/wcoss_dell_p3.5 
+  module load regional
+  APRUN="mpirun"
   ;;
 #
 "THEIA")
@@ -189,7 +194,7 @@ print_info_msg "$VERBOSE" "background type is is $BKTYPE"
 
 stampcycle=$(date -d "${START_DATE}" +%s)
 minHourDiff=100
-loops="009"    # or 009s for GFSv15
+loops="006"    # or 009s for GFSv15
 ens_type="nc"  # or nemsio for GFSv15
 foundens="false"
 cat "no ens found" >> filelist03
@@ -537,6 +542,8 @@ EOF
 #-----------------------------------------------------------------------
 #
 gsi_exec="${EXECDIR}/gsi.x"
+gsi_exec="/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/fv3lamda/regional_workflow/exec/regional_gsi.x"
+
 
 if [ -f $gsi_exec ]; then
   print_info_msg "$VERBOSE" "
