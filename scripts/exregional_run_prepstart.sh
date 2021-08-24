@@ -161,7 +161,10 @@ else
   restart_prefix="${YYYYMMDD}.${HH}0000."
 
 # Shun add for EMC version
+  if [ ${cycle_type} == "spinup" ]; then
   restart_prefix=""
+  fi
+
   n=${DA_CYCLE_INTERV}
   while [[ $n -le 6 ]] ; do
     checkfile=${bkpath}/${restart_prefix}fv_core.res.tile1.nc
@@ -224,6 +227,7 @@ else
   if [ ${cycle_type} == "spinup" ]; then
      FCST_LEN_HRS_thiscycle=${FCST_LEN_HRS_SPINUP}
   fi 
+  
   print_info_msg "$VERBOSE" " The forecast length for cycle (\"${HH}\") is
                  ( \"${FCST_LEN_HRS_thiscycle}\") "
 
