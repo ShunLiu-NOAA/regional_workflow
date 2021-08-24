@@ -106,6 +106,11 @@ case $MACHINE in
     ulimit -s unlimited
     ulimit -a
     APRUN="mpirun -l -np ${PE_MEMBER01}"
+    HOMEfv3=/gpfs/dell6/emc/modeling/noscrub/emc.campara/fv3lamda/regional_workflow
+    module use ${HOMEfv3}/modulefiles/wcoss_dell_p3.5
+    module load regional
+    module load fv3
+    APRUN="mpirun"
     ;;
 
   "HERA")
@@ -175,6 +180,7 @@ Creating links in the INPUT subdirectory of the current run directory to
 the grid and (filtered) orography files ..."
 
 
+set -x
 # Create links to fix files in the FIXLAM directory.
 
 
@@ -187,7 +193,9 @@ fi
 
 # Symlink to mosaic file with a completely different name.
 #target="${FIXLAM}/${CRES}${DOT_OR_USCORE}mosaic.halo${NH4}.nc"   # Should this point to this halo4 file or a halo3 file???
-target="${FIXLAM}/${CRES}${DOT_OR_USCORE}mosaic.halo${NH3}.nc"   # Should this point to this halo4 file or a halo3 file???
+#target="${FIXLAM}/${CRES}${DOT_OR_USCORE}mosaic.halo${NH3}.nc"   # Should this point to this halo4 file or a halo3 file???
+#for EMC version
+target="${FIXLAM}/${CRES}${DOT_OR_USCORE}mosaic.nc"   # Should this point to this halo4 file or a halo3 file???
 symlink="grid_spec.nc"
 if [ -f "${target}" ]; then
   ln_vrfy -sf ${relative_or_null} $target $symlink
@@ -460,6 +468,8 @@ if [ "${FV3_VER}" == "EMC" ]; then
   cp $FIXLAM/${CASE}_grid.tile${tile}.halo3.nc INPUT/.
   cp $FIXLAM/${CASE}_grid.tile${tile}.halo4.nc INPUT/.
   cp $FIXLAM/${CASE}_oro_data.tile${tile}.halo0.nc INPUT/.
+  cp $FIXLAM/${CASE}_oro_data_ls.tile${tile}.halo0.nc INPUT/.
+  cp $FIXLAM/${CASE}_oro_data_ss.tile${tile}.halo0.nc INPUT/.
   cp $FIXLAM/${CASE}_oro_data.tile${tile}.halo4.nc INPUT/.
   cp $FIXLAM/${CASE}_mosaic.nc INPUT/.
   
@@ -469,8 +479,13 @@ if [ "${FV3_VER}" == "EMC" ]; then
   ln -sf ${CASE}_grid.tile7.halo4.nc grid.tile7.halo4.nc
   ln -sf ${CASE}_oro_data.tile7.halo0.nc oro_data.nc
   ln -sf ${CASE}_oro_data.tile7.halo4.nc oro_data.tile7.halo4.nc
-  ln -sf sfc_data.tile7.nc sfc_data.nc
-  ln -sf gfs_data.tile7.nc gfs_data.nc
+  ln -sf ${CASE}_oro_data_ls.tile7.halo0.nc oro_data_ls.nc
+  ln -sf ${CASE}_oro_data_ss.tile7.halo0.nc oro_data_ss.nc
+  if [ $BKTYPE = 1 ]; then
+   # cold start
+    ln -sf sfc_data.tile7.halo0.nc sfc_data.nc
+    ln -sf gfs_data.tile7.halo0.nc gfs_data.nc
+  fi
   cd ..
   
   #-------------------------------------------------------------------
@@ -485,7 +500,18 @@ if [ "${FV3_VER}" == "EMC" ]; then
   
   if [ $MPSUITE = thompson ] ; then
   CCPP_SUITE=${CCPP_SUITE:-"FV3_GFS_v15_thompson_mynn_lam3km"}
-  cp ${PARMfv3}/thompson/input_sar_firstguess.nml input.nml
+   if [ $BKTYPE = 1 ]; then
+   # cold start
+   cp ${PARMfv3}/thompson/input_sar_firstguess.nml input.nml 
+   cp ${PARMfv3}/model_configure_sar_firstguess.tmp model_configure.tmp
+   elif [ $BKTYPE = 0 -a ${cycle_type} = spinup ] ; then
+   #cp ${PARMfv3}/thompson/input_sar_da_hourly.nml input.nml
+   cp ${PARMfv3}/thompson/input_sar_da_hourly.nml_no_gsi_bdy input.nml
+   cp ${PARMfv3}/model_configure_sar_da_hourly.tmp model_configure.tmp
+   else
+   cp ${PARMfv3}/thompson/input_sar_da.nml_no_gsi_bdy input.nml
+   cp ${PARMfv3}/model_configure_sar.tmp_writecomp model_configure.tmp
+   fi
   cp ${PARMfv3}/thompson/diag_table.tmp .
   cp ${PARMfv3}/thompson/field_table .
   cp $PARMfv3/thompson/CCN_ACTIVATE.BIN                          CCN_ACTIVATE.BIN
@@ -496,7 +522,6 @@ if [ "${FV3_VER}" == "EMC" ]; then
   fi
   
   cp ${PARMfv3}/fd_nems.yaml .
-  cp ${PARMfv3}/model_configure_sar_firstguess.tmp model_configure.tmp
   cp ${PARMfv3}/data_table .
   cp ${PARMfv3}/nems.configure .
 
@@ -528,19 +553,48 @@ if [ "${FV3_VER}" == "EMC" ]; then
   dy=`echo $CYCLEtm06 | cut -c7-8`
   hr=`echo $CYCLEtm06 | cut -c9-10`
   
+  if [ $BKTYPE = 1 ]; then
+   # cold start
 cat > temp << !
 ${yr}${mn}${dy}.${hr}Z
 $yr $mn $dy $hr 0 0
 !
+  else
+cat > temp << !
+${yr}${mn}${dy}.${hr}Z.${CASE}.32bit.non-hydro
+$yr $mn $dy $hr 0 0
+!
+  fi
   
   cat temp diag_table.tmp > diag_table
 
+
+  FCST_LEN_HRS_thiscycle=${FCST_LEN_HRS_CYCLES[${hr}]}
+
+  if [ $BKTYPE = 1 ]; then
   NHRSguess=01	#-- Forecast length for 1st guess generation (now 1-h with GDAS coldstart)
-  
+  NFCSTHRS=$NHRSguess	#-- Forecast length for 1st guess generation (now 1-h with GDAS coldstart)
   cat model_configure.tmp | sed s/NTASKS/$ntasks/ | sed s/YR/$yr/ | \
       sed s/MN/$mn/ | sed s/DY/$dy/ | sed s/H_R/$hr/ | \
-      sed s/NHRS/$NHRSguess/ | sed s/NTHRD/$OMP_NUM_THREADS/ | \
+      sed s/NHRS/$NFCSTHRS/ | sed s/NTHRD/$OMP_NUM_THREADS/ | \
       sed s/NCNODE/$ncnode/  >  model_configure
+  elif [ $BKTYPE = 0 -a ${cycle_type} = spinup ] ; then
+  NFCSTHRS=01	#-- Forecast length for spinup cycle (now 1-h with GDAS coldstart)
+  NRST=01
+  cat model_configure.tmp | sed s/NTASKS/$ntasks/ | sed s/YR/$yr/ | \
+      sed s/MN/$mn/ | sed s/DY/$dy/ | sed s/H_R/$hr/ | \
+      sed s/NHRS/$NFCSTHRS/ | sed s/NTHRD/$OMP_NUM_THREADS/ | \
+      sed s/NCNODE/$ncnode/ | sed s/NRESTART/$NRST/ >  model_configure
+  else
+  #NFCSTHRS=12	#-- Forecast length for spinup cycle (now 1-h with GDAS coldstart)
+  NFCSTHRS=$FCST_LEN_HRS_thiscycle  #-- Forecast length for spinup cycle (now 1-h with GDAS coldstart)
+  NRST=1
+  cat model_configure.tmp | sed s/NTASKS/$ntasks/ | sed s/YR/$yr/ | \
+      sed s/MN/$mn/ | sed s/DY/$dy/ | sed s/H_R/$hr/ | \
+      sed s/NHRS/$NFCSTHRS/ | sed s/NTHRD/$OMP_NUM_THREADS/ | \
+      sed s/NCNODE/$ncnode/ | sed s/NRESTART/$NRST/ >  model_configure
+  fi
+
   #For hyperthreading
   export OMP_NUM_THREADS=4
   
@@ -562,27 +616,66 @@ $yr $mn $dy $hr 0 0
   
 # startmsg
 # ${APRUNC} $EXECfv3/regional_forecast.x >$pgmout 2>err
+export KMP_STACKSIZE=1024m
+export KMP_AFFINITY=disabled
+#export KMP_AFFINITY=scatter
+export OMP_NUM_THREADS=4
+#export OMP_STACKSIZE=2048m
+export SENDECF=NO
   EXECfv3=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/fv3lamda/regional_workflow/exec
   ${APRUN} $EXECfv3/regional_forecast.x >pgmout 2>err
   export err=$?
 # export err=$?;err_chk
-  exit
   
   # copy GRIB2 files
   domain=conus
+
+####################
+# calculate tmmark
+####################
+if [ ${cycle_type} = spinup ]; then
+tindx="0 1"
+for i in $tindx
+do
+  cyc_spinstart=${CYCL_HRS_SPINSTART[${i}]}
+  cyc_prodstart=${CYCL_HRS_PRODSTART[${i}]}
+
+  if [ ${cyc_prodstart} = 00 ]; then
+    cyc_prodstart=24
+  fi
+
+  if [ $hr -ge $cyc_spinstart -a $hr -le $cyc_prodstart ]; then
+    let tm=cyc_prodstart-hr
+    tmmark=tm$(printf "%02d" $tm)
+    cyc=${CYCL_HRS_PRODSTART[${i}]}
+    echo this_cyc: $hr spinup_start:$cyc_spinstart prod_start:$cyc_prodstart tmmark:$tmmark
+    break
+  else
+    echo this is not spinup cycle, no TM value
+  fi
+done
+else
+tmmark=tm00
+cyc=$hr
+fi
   
   fhour="00 01"
   
-  for fhr in $fhour
-  do
-  
-  mv PRSLEV${fhr}.${tmmark} ${COMOUT}/fv3lam.t${cyc}z.${domain}.f${fhr}.${tmmark}.grib2
-  mv NATLEV${fhr}.${tmmark} ${COMOUT}/fv3lam.t${cyc}z.${domain}.natlev.f${fhr}.${tmmark}.grib2
-  
-  done
-  exit
+ COMOUT=$COMOUT_BASEDIR
+ mkdir -p $COMOUT/${cyc}
+ domain="COUNS"
+ #cyc=run_fcst_spinup_2021081811.log
+ #for fhr in $fhour
+ 
+ for ((i=0;i<${NFCSTHRS};i++))
+ do
+ fhr=$(printf "%02d" $i)
+ mv PRSLEV.GrbF${fhr} ${COMOUT}/${cyc}/fv3lam.t${cyc}z.${domain}.f${fhr}.${tmmark}.grib2
+ mv NATLEV.GrbF${fhr} ${COMOUT}/${cyc}/fv3lam.t${cyc}z.${domain}.natlev.f${fhr}.${tmmark}.grib2
+ done
 
 fi
+  exit
 
 
 
@@ -628,7 +721,7 @@ fi
 # end GSL version fix files
 #-----------------------------------------------------------------------
 
-exit
+if [ "${FV3_VER}" == "GSL"]; then
 #
 #-----------------------------------------------------------------------
 #
@@ -785,6 +878,10 @@ FV3 forecast completed successfully!!!
 Exiting script:  \"${scrfunc_fn}\"
 In directory:    \"${scrfunc_dir}\"
 ========================================================================"
+#===================
+# end of GSL version
+#===================
+fi
 #
 #-----------------------------------------------------------------------
 #
