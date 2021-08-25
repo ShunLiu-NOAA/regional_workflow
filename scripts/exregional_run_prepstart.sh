@@ -161,7 +161,8 @@ else
   restart_prefix="${YYYYMMDD}.${HH}0000."
 
 # Shun add for EMC version
-  if [ ${cycle_type} == "spinup" ]; then
+# if [ ${cycle_type} == "spinup" ]; then
+  if [ ${cycle_type} == "spinup" ] || [ ${BKTYPE} -eq 2 ]; then
   restart_prefix=""
   fi
 
