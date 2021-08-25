@@ -568,8 +568,7 @@ $yr $mn $dy $hr 0 0
   
   cat temp diag_table.tmp > diag_table
 
-
-  FCST_LEN_HRS_thiscycle=${FCST_LEN_HRS_CYCLES[${hr}]}
+  FCST_LEN_HRS_thiscycle=${FCST_LEN_HRS_CYCLES[${hr#0}]}
 
   if [ $BKTYPE = 1 ]; then
   NHRSguess=01	#-- Forecast length for 1st guess generation (now 1-h with GDAS coldstart)
@@ -580,7 +579,7 @@ $yr $mn $dy $hr 0 0
       sed s/NCNODE/$ncnode/  >  model_configure
   elif [ $BKTYPE = 0 -a ${cycle_type} = spinup ] ; then
   NFCSTHRS=01	#-- Forecast length for spinup cycle (now 1-h with GDAS coldstart)
-  NRST=01
+  NRST=1
   cat model_configure.tmp | sed s/NTASKS/$ntasks/ | sed s/YR/$yr/ | \
       sed s/MN/$mn/ | sed s/DY/$dy/ | sed s/H_R/$hr/ | \
       sed s/NHRS/$NFCSTHRS/ | sed s/NTHRD/$OMP_NUM_THREADS/ | \
@@ -625,7 +624,6 @@ export SENDECF=NO
   EXECfv3=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/fv3lamda/regional_workflow/exec
   ${APRUN} $EXECfv3/regional_forecast.x >pgmout 2>err
   export err=$?
-# export err=$?;err_chk
   
   # copy GRIB2 files
   domain=conus
@@ -660,18 +658,19 @@ cyc=$hr
 fi
   
   fhour="00 01"
+
+ tm=`echo $tmmark | cut -c3-4`
+ thistime=`$NDATE +${tm} ${cdate}`
   
- COMOUT=$COMOUT_BASEDIR
- mkdir -p $COMOUT/${cyc}
+ COMOUT=$COMOUT_BASEDIR/${thistime}
+ mkdir -p $COMOUT
  domain="COUNS"
- #cyc=run_fcst_spinup_2021081811.log
- #for fhr in $fhour
  
- for ((i=0;i<${NFCSTHRS};i++))
+ for ((i=0;i<=${NFCSTHRS};i++))
  do
  fhr=$(printf "%02d" $i)
- mv PRSLEV.GrbF${fhr} ${COMOUT}/${cyc}/fv3lam.t${cyc}z.${domain}.f${fhr}.${tmmark}.grib2
- mv NATLEV.GrbF${fhr} ${COMOUT}/${cyc}/fv3lam.t${cyc}z.${domain}.natlev.f${fhr}.${tmmark}.grib2
+ mv PRSLEV.GrbF${fhr} ${COMOUT}/rrfs.t${cyc}z.${domain}.f${fhr}.${tmmark}.grib2
+ mv NATLEV.GrbF${fhr} ${COMOUT}/rrfs.t${cyc}z.${domain}.natlev.f${fhr}.${tmmark}.grib2
  done
 
 fi
