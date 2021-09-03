@@ -579,6 +579,23 @@ Call to executable to run GSI returned with nonzero exit code."
 
 #-----------------------------------------------------------------------
 #
+# Copy fits file to COMOUT.
+#
+#-----------------------------------------------------------------------
+#
+  mv fort.201 fit_p1
+  mv fort.202 fit_w1
+  mv fort.203 fit_t1
+  mv fort.204 fit_q1
+  mv fort.205 fit_pw1
+  mv fort.207 fit_rad1
+  mv fort.209 fit_rw1
+  
+# cat fit_p1 fit_w1 fit_t1 fit_q1 fit_pw1 fit_rad1 fit_rw1 > $COMOUT/fv3lam.t${CYCrun}z.fits.${tmmark}
+# cat fort.208 fort.210 fort.211 fort.212 fort.213 fort.220 > $COMOUT/fv3lam.t${CYCrun}z.fits2.${tmmark}
+
+#-----------------------------------------------------------------------
+#
 # Copy analysis results to INPUT for model forecast.
 #
 #-----------------------------------------------------------------------

@@ -106,19 +106,19 @@ CCPP_PHYS_SUITE="FV3_GFS_v15p2"
 #CCPP_PHYS_SUITE="FV3_RAP"
 
 EXTRN_MDL_ICS_OFFSET_HRS="6"
-BOUNDARY_LEN_HRS="24"
+BOUNDARY_LEN_HRS="72"
 BOUNDARY_LONG_LEN_HRS="1"
 LBC_SPEC_INTVL_HRS="1"
 EXTRN_MDL_LBCS_OFFSET_HRS="0"
 EXTRN_MDL_LBCS_SEARCH_OFFSET_HRS="6"
 
-DATE_FIRST_CYCL="20210801"
-DATE_LAST_CYCL="20210801"
+DATE_FIRST_CYCL="20210823"
+DATE_LAST_CYCL="20210823"
 CYCL_HRS=( "00" "12" )
 CYCL_HRS_SPINSTART=("06" "18")
 CYCL_HRS_PRODSTART=("12" "00")
 CYCLEMONTH="8"
-CYCLEDAY="01-01"
+CYCLEDAY="23-23"
 
 if [[ $DO_RETRO == "true" ]] ; then
 
@@ -144,6 +144,14 @@ if [[ $DO_RETRO == "true" ]] ; then
     EXTRN_MDL_SOURCE_BASEDIR_ICS=/work/noaa/wrfruc/mhu/rrfs/data/gfs
     EXTRN_MDL_SOURCE_BASEDIR_LBCS=/work/noaa/wrfruc/mhu/rrfs/data/gfs
     OBSPATH=/work/noaa/wrfruc/mhu/rrfs/data/obs_rap
+  fi
+
+  if [[ $MACHINE == "WCOSS_DELL_P3" ]] ; then
+    EXTRN_MDL_SOURCE_BASEDIR_ICS=/gpfs/dell1/nco/ops/com/gfs/prod
+    EXTRN_MDL_SOURCE_BASEDIR_LBCS=/gpfs/dell1/nco/ops/com/gfs/prod
+    OBSPATH=/gpfs/hps/nco/ops/com/rap/prod
+    OBSPATH_NSSLMOSIAC=/gpfs/dell1/nco/ops/dcom/prod/ldmdata/obs/upperair/mrms/conus
+    ENKF_FCST=/gpfs/dell1/nco/ops/com/gfs/prod
   fi
 
     INITIAL_CYCLEDEF="${DATE_FIRST_CYCL}0600 ${DATE_LAST_CYCL}2300 12:00:00"
@@ -187,7 +195,7 @@ NNODES_RUN_POST="1"
 EXTRN_MDL_NAME_ICS="FV3GFS"
 EXTRN_MDL_NAME_LBCS="FV3GFS"
 
-FV3GFS_FILE_FMT_ICS="grib2"
+FV3GFS_FILE_FMT_ICS="netcdf"
 FV3GFS_FILE_FMT_LBCS="grib2"
 
 envir="para"
