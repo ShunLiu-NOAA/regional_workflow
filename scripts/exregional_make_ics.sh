@@ -552,7 +552,7 @@ LEVS=66
 echo shun $workdir
 cat <<EOF >${workdir}/fort.41
 &config
- mosaic_file_target_grid="$FIXLAM/${CASE}_mosaic.nc"
+ mosaic_file_target_grid="$FIXLAM/${CASE}_mosaic.halo4.nc"
  fix_dir_target_grid="$FIXLAM"
  orog_dir_target_grid="$FIXLAM"
  orog_files_target_grid="${CASE}_oro_data.tile7.halo4.nc"

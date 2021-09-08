@@ -55,6 +55,7 @@ hour zero).
 #-----------------------------------------------------------------------
 #
 lbcs_dir="${CYCLE_DIR}${SLASH_ENSMEM_SUBDIR}/lbcs"
+thisbchr="${bchr}"
 mkdir_vrfy -p "${lbcs_dir}"
 
 #
@@ -65,7 +66,8 @@ mkdir_vrfy -p "${lbcs_dir}"
 #-----------------------------------------------------------------------
 #
 $SCRIPTSDIR/exregional_make_lbcs.sh \
-  lbcs_dir="${lbcs_dir}" || \
+  lbcs_dir="${lbcs_dir}" \
+  bchr="${thisbchr}" || \
 print_err_msg_exit "\
 Call to ex-script corresponding to J-job \"${scrfunc_fn}\" failed."
 #
