@@ -445,14 +445,14 @@ if [ "${FV3_VER}" == "EMC" ]; then
   cp $FIXam/merra2_fix/aeroclim* .
   cp $FIXam/merra2_fix/optics* .
   
-  ln -sf $FIXLAM/C3359.maximum_snow_albedo.tile7.halo0.nc C3359.maximum_snow_albedo.tile1.nc
-  ln -sf $FIXLAM/C3359.snowfree_albedo.tile7.halo0.nc C3359.snowfree_albedo.tile1.nc
-  ln -sf $FIXLAM/C3359.slope_type.tile7.halo0.nc C3359.slope_type.tile1.nc
-  ln -sf $FIXLAM/C3359.soil_type.tile7.halo0.nc C3359.soil_type.tile1.nc
-  ln -sf $FIXLAM/C3359.vegetation_type.tile7.halo0.nc C3359.vegetation_type.tile1.nc
-  ln -sf $FIXLAM/C3359.vegetation_greenness.tile7.halo0.nc C3359.vegetation_greenness.tile1.nc
-  ln -sf $FIXLAM/C3359.substrate_temperature.tile7.halo0.nc C3359.substrate_temperature.tile1.nc
-  ln -sf $FIXLAM/C3359.facsf.tile7.halo0.nc C3359.facsf.tile1.nc
+  ln -sf $FIXLAM/${CRES}.maximum_snow_albedo.tile7.halo0.nc ${CRES}.maximum_snow_albedo.tile1.nc
+  ln -sf $FIXLAM/${CRES}.snowfree_albedo.tile7.halo0.nc ${CRES}.snowfree_albedo.tile1.nc
+  ln -sf $FIXLAM/${CRES}.slope_type.tile7.halo0.nc ${CRES}.slope_type.tile1.nc
+  ln -sf $FIXLAM/${CRES}.soil_type.tile7.halo0.nc ${CRES}.soil_type.tile1.nc
+  ln -sf $FIXLAM/${CRES}.vegetation_type.tile7.halo0.nc ${CRES}.vegetation_type.tile1.nc
+  ln -sf $FIXLAM/${CRES}.vegetation_greenness.tile7.halo0.nc ${CRES}.vegetation_greenness.tile1.nc
+  ln -sf $FIXLAM/${CRES}.substrate_temperature.tile7.halo0.nc ${CRES}.substrate_temperature.tile1.nc
+  ln -sf $FIXLAM/${CRES}.facsf.tile7.halo0.nc ${CRES}.facsf.tile1.nc
   
   FIXco2=$FIXam/fix_co2_proj
   for file in `ls $FIXco2/global_co2historicaldata* ` ; do
@@ -493,7 +493,7 @@ if [ "${FV3_VER}" == "EMC" ]; then
   #   input.nml, input_nest02.nml, model_configure, and nems.configure
   #-------------------------------------------------------------------
   
-  PARMfv3=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs/fix/parm
+  PARMfv3=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs/fix/parm_RRFS_NA_3km
   MPSUITE=thompson
 
   CCPP=${CCPP:-"true"}
@@ -541,10 +541,20 @@ if [ "${FV3_VER}" == "EMC" ]; then
   module load esmf/8.1.0bs21
   
   export OMP_NUM_THREADS=2
+  
+  if [ $CRES = 'C3359' ]; then
   nodes=45
   ncnode=40
-  let nctsk=ncnode/OMP_NUM_THREADS
   let ntasks=896
+  fi
+
+  if [ $CRES = 'C3445' ]; then
+  nodes=78
+  ncnode=28
+  let ntasks=1096
+  fi
+
+  let nctsk=ncnode/OMP_NUM_THREADS
   echo nctsk = $nctsk and ntasks = $ntasks
   
   CYCLEtm06=$cdate

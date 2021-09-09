@@ -93,7 +93,7 @@ case $MACHINE in
   ulimit -a
   #APRUN="mpirun -l -np ${PE_MEMBER01}"
   #APRUN="mpirun -l -np 384"
-  HOMEfv3=/gpfs/dell6/emc/modeling/noscrub/emc.campara/fv3lamda/regional_workflow
+  HOMEfv3=/gpfs/dell2/emc/modeling/noscrub/emc.campara/fv3lamdax/regional_workflow
   module use ${HOMEfv3}/modulefiles/wcoss_dell_p3.5 
   module load regional
   APRUN="mpirun"
