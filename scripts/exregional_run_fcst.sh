@@ -192,13 +192,15 @@ if [ "${RUN_TASK_MAKE_GRID}" = "TRUE" ] && [ "${MACHINE}" != "WCOSS_CRAY" ]; the
 fi
 
 # Symlink to mosaic file with a completely different name.
-#target="${FIXLAM}/${CRES}${DOT_OR_USCORE}mosaic.halo${NH4}.nc"   # Should this point to this halo4 file or a halo3 file???
 #target="${FIXLAM}/${CRES}${DOT_OR_USCORE}mosaic.halo${NH3}.nc"   # Should this point to this halo4 file or a halo3 file???
 #for EMC version
-target="${FIXLAM}/${CRES}${DOT_OR_USCORE}mosaic.nc"   # Should this point to this halo4 file or a halo3 file???
+target1="${FIXLAM}/${CRES}${DOT_OR_USCORE}mosaic.nc"   # Should this point to this halo4 file or a halo3 file???
+target="${FIXLAM}/${CRES}${DOT_OR_USCORE}mosaic.halo${NH4}.nc"   # Should this point to this halo4 file or a halo3 file???
 symlink="grid_spec.nc"
 if [ -f "${target}" ]; then
   ln_vrfy -sf ${relative_or_null} $target $symlink
+elif [ -f "${target1}" ]; then
+  ln_vrfy -sf ${relative_or_null} $target1 $symlink
 else
   print_err_msg_exit "\
 Cannot create symlink because target does not exist:
@@ -420,7 +422,7 @@ FV3_VER=EMC
 #-----------------------------------------------------------------------
 
 if [ "${FV3_VER}" == "EMC" ]; then
-  FIXam=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs/fix/fix_am_emc
+  FIXam=/gpfs/dell6/emc/modeling/noscrub/emc.campara/Shun.Liu/rrfs/fix/fix_am_emc
   #---------------------------------------------- 
   # Copy all the necessary fix files
   #---------------------------------------------- 
@@ -471,7 +473,12 @@ if [ "${FV3_VER}" == "EMC" ]; then
   cp $FIXLAM/${CASE}_oro_data_ls.tile${tile}.halo0.nc INPUT/.
   cp $FIXLAM/${CASE}_oro_data_ss.tile${tile}.halo0.nc INPUT/.
   cp $FIXLAM/${CASE}_oro_data.tile${tile}.halo4.nc INPUT/.
+  if [ $BKTYPE = 1 ]; then
+  # cold start
   cp $FIXLAM/${CASE}_mosaic.nc INPUT/.
+  else
+  cp $FIXLAM/${CASE}_mosaic.halo3.nc INPUT/${CASE}_mosaic.nc
+  fi
   
   cd INPUT
   ln -sf ${CASE}_mosaic.nc grid_spec.nc
@@ -493,7 +500,7 @@ if [ "${FV3_VER}" == "EMC" ]; then
   #   input.nml, input_nest02.nml, model_configure, and nems.configure
   #-------------------------------------------------------------------
   
-  PARMfv3=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs/fix/parm_RRFS_NA_3km
+  PARMfv3=/gpfs/dell6/emc/modeling/noscrub/emc.campara/Shun.Liu/rrfs/fix/parm_RRFS_NA_3km
   MPSUITE=thompson
 
   CCPP=${CCPP:-"true"}
@@ -530,7 +537,8 @@ if [ "${FV3_VER}" == "EMC" ]; then
   cd create_expanded_restart_files_for_DA
   cp ../field_table .
   cp ../input.nml .
-  HOMEfv3=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/fv3lamda/regional_workflow
+  #HOMEfv3=/gpfs/dell6/emc/modeling/noscrub/emc.campara/Shun.Liu/fv3lamda/regional_workflow
+  HOMEfv3=/gpfs/dell2/emc/modeling/noscrub/emc.campara/fv3lamdax/regional_workflow
   cp $HOMEfv3/regional_da_imbalance/create_expanded_restart_files_for_DA.x .
   ./create_expanded_restart_files_for_DA.x
   mv fv_core.res.tile1_new.nc ../RESTART/.
@@ -551,7 +559,7 @@ if [ "${FV3_VER}" == "EMC" ]; then
   if [ $CRES = 'C3445' ]; then
   nodes=78
   ncnode=28
-  let ntasks=1096
+  let ntasks=1092
   fi
 
   let nctsk=ncnode/OMP_NUM_THREADS
@@ -631,12 +639,45 @@ export KMP_AFFINITY=disabled
 export OMP_NUM_THREADS=4
 #export OMP_STACKSIZE=2048m
 export SENDECF=NO
-  EXECfv3=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/fv3lamda/regional_workflow/exec
+  #EXECfv3=/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/fv3lamda/regional_workflow/exec
+  EXECfv3=/gpfs/dell2/emc/modeling/noscrub/emc.campara/fv3lamdax/regional_workflow/exec
   ${APRUN} $EXECfv3/regional_forecast.x >pgmout 2>err
   export err=$?
+
+
+# cd RESTART
+# mv coupler.res $GUESSdir/.
+# mv fv_core.res.nc $GUESSdir/.
+# mv fv_core.res.tile1.nc $GUESSdir/.
+# mv fv_tracer.res.tile1.nc $GUESSdir/.
+#  cp sfc_data.nc $GUESSdir/.
+
+  # Now move orig sized sfc_data file to ANLdir since GSI job will now only use 
+  # bigger one
+# cp sfc_data.nc $ANLdir/sfc_data.nc
+  
+  #Move enlarged restart files for 00-h BC's
+# mkdir new
+# mv fv_tracer.res.tile1_new.nc ./new
+# mv fv_core.res.tile1_new.nc ./new
+  
+  # Make enlarged sfc file
+# mv sfc_data.nc sfc_data_orig.nc
+# mv grid_spec.nc grid_spec_orig.nc
+  
+# cp $HOMEfv3/regional_da_imbalance/prep_for_regional_DA.x .
+# cp $FIXsar_C3445/C3445_grid.tile7.halo3.nc grid.tile7.halo3.nc
+# ./prep_for_regional_DA.x
+# mv sfc_data_new.nc $GUESSdir/sfc_data_new.nc
+# mv grid_spec_new.nc $GUESSdir/grid_spec_new.nc
+  
+  # These are not used in GSI but are needed to warmstart FV3
+  # so they go directly into ANLdir
+# mv phy_data.nc $ANLdir/phy_data.nc
+# mv fv_srf_wnd.res.tile1.nc $ANLdir/fv_srf_wnd.res.tile1.nc
   
   # copy GRIB2 files
-  domain=conus
+  domain=NA
 
 ####################
 # calculate tmmark
@@ -674,7 +715,7 @@ fi
   
  COMOUT=$COMOUT_BASEDIR/${thistime}
  mkdir -p $COMOUT
- domain="NA"
+ domain="CONUS"
  
  for ((i=0;i<=${NFCSTHRS};i++))
  do

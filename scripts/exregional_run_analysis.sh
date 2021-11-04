@@ -301,24 +301,29 @@ fi
 #  Adding radar_tten array to fv3_tracer. Should remove this after add this array in
 #           radar_tten converting code.
 #-----------------------------------------------------------------------
+dothis="true"
 
+if [ $dothis = "true" ]; then
 cp_vrfy ${fixgriddir}/fv3_akbk                     fv3_akbk
 cp_vrfy ${fixgriddir}/fv3_grid_spec                fv3_grid_spec
 
 if [ ${BKTYPE} -eq 1 ]; then  # cold start uses background from INPUT
   cp_vrfy ${bkpath}/gfs_data.tile7.halo0.nc        gfs_data.tile7.halo0.nc_b
-  ncks -A -v  phis ${fixgriddir}/phis.nc           gfs_data.tile7.halo0.nc_b
+  #ncks -A -v  phis ${fixgriddir}/phis.nc           gfs_data.tile7.halo0.nc_b
+  ncks -A -v  phis ${fixgriddir}/fv3_dynvars        gfs_data.tile7.halo0.nc_b
 
   cp_vrfy ${bkpath}/sfc_data.tile7.halo0.nc        fv3_sfcdata
   cp_vrfy gfs_data.tile7.halo0.nc_b                fv3_dynvars
+# cp /gpfs/dell2/ptmp/emc.campara/fv3lamdax/fv3lamdax.20211019/12/guess.tm06/sfc_data.tile7.nc fv3_sfcdata
+# cp /gpfs/dell2/ptmp/emc.campara/fv3lamdax/fv3lamdax.20211019/12/guess.tm06/gfs_data.tile7.nc fv3_dynvars
   ln_vrfy -s fv3_dynvars                           fv3_tracer
 
-  fv3lam_bg_type=1
+  fv3lam_bg_opt=1
 else                          # cycle uses background from restart
   cp_vrfy  ${bkpath}/fv_core.res.tile1.nc             fv3_dynvars
   cp_vrfy  ${bkpath}/fv_tracer.res.tile1.nc           fv3_tracer
   cp_vrfy  ${bkpath}/sfc_data.nc                      fv3_sfcdata
-  fv3lam_bg_type=0
+  fv3lam_bg_opt=0
 fi
 
 # update times in coupler.res to current cycle time
@@ -327,6 +332,8 @@ sed -i "s/yyyy/${YYYY}/" coupler.res
 sed -i "s/mm/${MM}/"     coupler.res
 sed -i "s/dd/${DD}/"     coupler.res
 sed -i "s/hh/${HH}/"     coupler.res
+
+fi
 
 #
 #-----------------------------------------------------------------------
@@ -383,6 +390,54 @@ do
   fi
 done
 
+####################
+# calculate tmmark
+####################
+hr=$HH
+if [ ${cycle_type} = spinup ]; then
+tindx="0 1"
+for i in $tindx
+do
+  cyc_spinstart=${CYCL_HRS_SPINSTART[${i}]}
+  cyc_prodstart=${CYCL_HRS_PRODSTART[${i}]}
+
+  if [ ${cyc_prodstart} = 00 ]; then
+    cyc_prodstart=24
+  fi
+
+  if [ $hr -ge $cyc_spinstart -a $hr -le $cyc_prodstart ]; then
+    let tm=cyc_prodstart-hr
+    tmmark=tm$(printf "%02d" $tm)
+    cyc=${CYCL_HRS_PRODSTART[${i}]}
+    echo this_cyc: $hr spinup_start:$cyc_spinstart prod_start:$cyc_prodstart tmmark:$tmmark
+    break
+  else
+    echo this is not spinup cycle, no TM value
+  fi
+done
+else
+tmmark=tm00
+cyc=$hr
+fi
+
+ fhour="00 01"
+
+ tm=`echo $tmmark | cut -c3-4`
+ thistime=`$NDATE +${tm} ${CDATE}`
+
+ CYCrun=`echo $thistime | cut -c9-10`
+
+ COMOUT=$COMOUT_BASEDIR/${thistime}
+ mkdir -p $COMOUT
+
+ COMINgfs=/gpfs/dell1/nco/ops/com/gfs/prod
+ COMINgdas=/gpfs/dell1/nco/ops/com/gfs/prod
+ COMINnam=/gpfs/dell1/nco/ops/com/nam/prod
+ COMINrap=/gpfs/hps/nco/ops/com/rap/prod
+ COMINpararap=/gpfs/hps/nco/ops/com/rap/para
+ COMINbias=$COMOUT
+ COMINrtma=/gpfs/dell2/nco/ops/com/rtma/prod
+
 #-----------------------------------------------------------------------
 #
 # Create links to fix files in the FIXgsi directory.
@@ -404,202 +459,477 @@ done
 #
 #-----------------------------------------------------------------------
 
-ANAVINFO=${USHDIR}/templates/${ANAVINFO_FN}
-CONVINFO=${USHDIR}/templates/${CONVINFO_FN}
-HYBENSINFO=${USHDIR}/templates/${HYBENSINFO_FN}
-OBERROR=${USHDIR}/templates/${OBERROR_FN}
-#ANAVINFO=${FIX_GSI}/${ANAVINFO_FN}
-#CONVINFO=${FIX_GSI}/${CONVINFO_FN}
-#HYBENSINFO=${FIX_GSI}/${HYBENSINFO_FN}
-#OBERROR=${FIX_GSI}/${OBERROR_FN}
-BERROR=${FIX_GSI}/${BERROR_FN}
 
-SATINFO=${FIX_GSI}/global_satinfo.txt
-OZINFO=${FIX_GSI}/global_ozinfo.txt
-PCPINFO=${FIX_GSI}/global_pcpinfo.txt
-ATMS_BEAMWIDTH=${FIX_GSI}/atms_beamwidth.txt
+FV3_VER=EMC
+#if [ "${FV3_VER}" == "EMC" ]; then
+PARMfv3=/gpfs/dell6/emc/modeling/noscrub/emc.campara/Shun.Liu/rrfs/fix/parm_RRFS_NA_3km
+EXECfv3=/gpfs/dell6/emc/modeling/noscrub/emc.campara/Shun.Liu/rrfs/ufs-srweather-app/bin
+export fixgsi=/gpfs/dell6/emc/modeling/noscrub/Eric.Rogers/fv3lam_for_dellp3.5/sorc/regional_gsi.fd/fix
+export fixcrtm=/usrx/local/nceplibs/dev/NCEPLIBS/src/crtm_v2.3.0/fix
 
-# Fixed fields
-cp_vrfy ${ANAVINFO} anavinfo
-cp_vrfy ${BERROR}   berror_stats
-cp_vrfy $SATINFO    satinfo
-cp_vrfy $CONVINFO   convinfo
-cp_vrfy $OZINFO     ozinfo
-cp_vrfy $PCPINFO    pcpinfo
-cp_vrfy $OBERROR    errtable
-cp_vrfy $ATMS_BEAMWIDTH atms_beamwidth.txt
-cp_vrfy ${HYBENSINFO} hybens_info
+# Set runtime and save directories
+export endianness=Big_Endian
 
-# Get aircraft reject list and surface uselist
-if [ -r ${AIRCRAFT_REJECT}/current_bad_aircraft.txt ]; then
-  cp_vrfy ${AIRCRAFT_REJECT}/current_bad_aircraft.txt current_bad_aircraft
-else
-  print_info_msg "$VERBOSE" "Warning: gsd aircraft reject list does not exist!" 
+# Set variables used in script
+#   ncp is cp replacement, currently keep as /bin/cp
+ncp=/bin/cp
+
+# Utility to cat NETCDF diag files from all processor
+export CATEXEC=$EXECfv3/nc_diag_cat_serial.x
+
+#export HYB_ENS=".true."
+export HYB_ENS=".false."
+
+# Get Fv3GDAS Enkf files
+# We expect 81 total files to be present (80 enkf + 1 mean)
+export nens=81
+
+# Not using FGAT or 4DEnVar, so hardwire nhr_assimilation to 3
+export nhr_assimilation=03
+##typeset -Z2 nhr_assimilation
+
+UTILfv3=/gpfs/dell6/emc/modeling/noscrub/emc.campara/Shun.Liu/rrfs/ufs-srweather-app/regional_workflow/util/ush
+vlddate=$CDATE
+python $UTILfv3/getbest_EnKF_FV3GDAS.py -v $vlddate --exact=no --minsize=${nens} -d ${COMINgfs}/enkfgdas -o filelist${nhr_assimilation} --o3fname=gfs_sigf${nhr_assimilation} --gfs_netcdf=yes
+
+#Check to see if ensembles were found 
+numfiles=`cat filelist03 | wc -l`
+
+if [ $numfiles -ne 81 ]; then
+  echo "Ensembles not found - turning off HYBENS!"
+  export HYB_ENS=".false."
 fi
 
-if [ -r ${FIX_GSI}/gsd_sfcobs_provider.txt ]; then
-  cp_vrfy ${FIX_GSI}/gsd_sfcobs_provider.txt gsd_sfcobs_provider.txt
-else
-  print_info_msg "$VERBOSE" "Warning: gsd surface observation provider does not exist!" 
+
+echo "HYB_ENS=$HYB_ENS" > $COMOUT/fv3lam.t${CYCrun}z.hybens.tm06
+
+nens=`cat filelist03 | wc -l`
+mv filelist03 $COMOUT/${RUN}.t${CYCrun}z.filelist03.tm06
+ls ens_* >>filelist03
+
+# Set parameters
+export USEGFSO3=.false.
+export nhr_assimilation=3
+export vs=1.
+export fstat=.false.
+export i_gsdcldanal_type=0
+
+# Diagnostic files options
+export lobsdiag_forenkf=.false.
+export netcdf_diag=.true.
+export binary_diag=.false.
+DIAG_SUFFIX=${DIAG_SUFFIX:-""}
+if [ $netcdf_diag = ".true." ] ; then
+   DIAG_SUFFIX="${DIAG_SUFFIX}.nc4"
 fi
 
-gsd_sfcobs_uselist="gsd_sfcobs_uselist.txt"
-for use_list in "${SFCOBS_USELIST}/current_mesonet_uselist.txt" \
-                "${SFCOBS_USELIST}/gsd_sfcobs_uselist.txt"
-do 
-  if [ -r $use_list ] ; then
-    cp_vrfy $use_list  $gsd_sfcobs_uselist
-    print_info_msg "$VERBOSE" "Use surface obs uselist: $use_list "
-    break
-  fi
-done
-if [ ! -r $use_list ] ; then 
-  print_info_msg "$VERBOSE" "Warning: gsd surface observation uselist does not exist!" 
-fi
+bg_opt=1
+nst_gsi=0
 
-#-----------------------------------------------------------------------
-#
-# CRTM Spectral and Transmittance coefficients
-#
-#-----------------------------------------------------------------------
-CRTMFIX=${FIX_CRTM}
-emiscoef_IRwater=${CRTMFIX}/Nalli.IRwater.EmisCoeff.bin
-emiscoef_IRice=${CRTMFIX}/NPOESS.IRice.EmisCoeff.bin
-emiscoef_IRland=${CRTMFIX}/NPOESS.IRland.EmisCoeff.bin
-emiscoef_IRsnow=${CRTMFIX}/NPOESS.IRsnow.EmisCoeff.bin
-emiscoef_VISice=${CRTMFIX}/NPOESS.VISice.EmisCoeff.bin
-emiscoef_VISland=${CRTMFIX}/NPOESS.VISland.EmisCoeff.bin
-emiscoef_VISsnow=${CRTMFIX}/NPOESS.VISsnow.EmisCoeff.bin
-emiscoef_VISwater=${CRTMFIX}/NPOESS.VISwater.EmisCoeff.bin
-emiscoef_MWwater=${CRTMFIX}/FASTEM6.MWwater.EmisCoeff.bin
-aercoef=${CRTMFIX}/AerosolCoeff.bin
-cldcoef=${CRTMFIX}/CloudCoeff.bin
-
-ln -s ${emiscoef_IRwater} Nalli.IRwater.EmisCoeff.bin
-ln -s $emiscoef_IRice ./NPOESS.IRice.EmisCoeff.bin
-ln -s $emiscoef_IRsnow ./NPOESS.IRsnow.EmisCoeff.bin
-ln -s $emiscoef_IRland ./NPOESS.IRland.EmisCoeff.bin
-ln -s $emiscoef_VISice ./NPOESS.VISice.EmisCoeff.bin
-ln -s $emiscoef_VISland ./NPOESS.VISland.EmisCoeff.bin
-ln -s $emiscoef_VISsnow ./NPOESS.VISsnow.EmisCoeff.bin
-ln -s $emiscoef_VISwater ./NPOESS.VISwater.EmisCoeff.bin
-ln -s $emiscoef_MWwater ./FASTEM6.MWwater.EmisCoeff.bin
-ln -s $aercoef  ./AerosolCoeff.bin
-ln -s $cldcoef  ./CloudCoeff.bin
-
-
-# Copy CRTM coefficient files based on entries in satinfo file
-for file in $(awk '{if($1!~"!"){print $1}}' ./satinfo | sort | uniq) ;do
-   ln -s ${CRTMFIX}/${file}.SpcCoeff.bin ./
-   ln -s ${CRTMFIX}/${file}.TauCoeff.bin ./
-done
-
-## satellite bias correction
-#if [ ${FULLCYC} -eq 1 ]; then
-#   latest_bias=${DATAHOME_PBK}/satbias/satbias_out_latest
-#   latest_bias_pc=${DATAHOME_PBK}/satbias/satbias_pc.out_latest
-#   latest_radstat=${DATAHOME_PBK}/satbias/radstat.rap_latest
-#fi
-
-# cp $latest_bias ./satbias_in
-# cp $latest_bias_pc ./satbias_pc
-# cp $latest_radstat ./radstat.rap
-# listdiag=`tar xvf radstat.rap | cut -d' ' -f2 | grep _ges`
-# for type in $listdiag; do
-#       diag_file=`echo $type | cut -d',' -f1`
-#       fname=`echo $diag_file | cut -d'.' -f1`
-#       date=`echo $diag_file | cut -d'.' -f2`
-#       gunzip $diag_file
-#       fnameanl=$(echo $fname|sed 's/_ges//g')
-#       mv $fname.$date $fnameanl
-# done
-#
-#mv radstat.rap  radstat.rap.for_this_cycle
-
-#-----------------------------------------------------------------------
-#
-# Build namelist and run GSI
-#
-#-----------------------------------------------------------------------
-# Link the AMV bufr file
-ifsatbufr=.false.
-
-# Set some parameters for use by the GSI executable and to build the namelist
-grid_ratio=1
-cloudanalysistype=0
-
-# Build the GSI namelist on-the-fly
-. ${USHDIR}/templates/gsiparm.anl.sh
+# Make gsi namelist
 cat << EOF > gsiparm.anl
-$gsi_namelist
+
+ &SETUP
+   miter=2,niter(1)=50,niter(2)=50,niter_no_qc(1)=20,
+   write_diag(1)=.true.,write_diag(2)=.false.,write_diag(3)=.true.,
+   gencode=78,qoption=2,
+   factqmin=0.0,factqmax=0.0,
+   iguess=-1,use_gfs_ozone=${USEGFSO3},
+   oneobtest=.false.,retrieval=.false.,
+   nhr_assimilation=${nhr_assimilation},l_foto=.false.,
+   use_pbl=.false.,gpstop=30.,
+   use_gfs_nemsio=.false.,use_gfs_ncio=.true.,
+   print_diag_pcg=.true.,
+   newpc4pred=.true., adp_anglebc=.true., angord=4,
+   passive_bc=.true., use_edges=.false., emiss_bc=.true.,
+   diag_precon=.true., step_start=1.e-3, l_reg_update_hydro_delz=.true.,
+   netcdf_diag=$netcdf_diag,binary_diag=$binary_diag,
+ /
+ &GRIDOPTS
+   fv3_regional=.true.,grid_ratio_fv3_regional=3.0,nvege_type=20,
+ /
+ &BKGERR
+   hzscl=0.373,0.746,1.50,
+   vs=${vs},bw=0.,fstat=${fstat},
+ /
+ &ANBKGERR
+   anisotropic=.false.,
+ /
+ &JCOPTS
+ /
+ &STRONGOPTS
+    nstrong=0,nvmodes_keep=20,period_max=3.,
+    baldiag_full=.true.,baldiag_inc=.true.,
+ /
+ &OBSQC
+   dfact=0.75,dfact1=3.0,noiqc=.false.,c_varqc=0.02,
+   vadfile='prepbufr',njqc=.false.,vqc=.true.,
+   aircraft_t_bc=.true.,biaspredt=1000.0,upd_aircraft=.true.,cleanup_tail=.true.,
+ /
+ &OBS_INPUT
+   dmesh(1)=120.0,dmesh(2)=60.0,time_window_max=1.5,ext_sonde=.true.,
+ /
+OBS_INPUT::
+!  dfile          dtype       dplat     dsis                 dval    dthin dsfcalc
+   prepbufr       ps          null      ps                   1.0     0     0
+   prepbufr       t           null      t                    1.0     0     0
+   prepbufr       q           null      q                    1.0     0     0
+   prepbufr       pw          null      pw                   1.0     0     0
+   prepbufr       uv          null      uv                   1.0     0     0
+   prepbufr       spd         null      spd                  1.0     0     0
+   prepbufr       dw          null      dw                   1.0     0     0
+   prepbufr       sst         null      sst                  1.0     0     0
+::
+ &SUPEROB_RADAR
+   del_azimuth=5.,del_elev=.25,del_range=5000.,del_time=.5,elev_angle_max=5.,minnum=50,range_max=100000.,
+   l2superob_only=.false.,
+ /
+ &LAG_DATA
+ /
+ &HYBRID_ENSEMBLE
+   l_hyb_ens=$HYB_ENS,
+   n_ens=$nens,
+   uv_hyb_ens=.true.,
+   beta_s0=0.25,
+   s_ens_h=300,
+   s_ens_v=5,
+   generate_ens=.false.,
+   regional_ensemble_option=1,
+   fv3sar_bg_opt=${fv3lam_bg_opt},
+   aniso_a_en=.false.,
+   nlon_ens=0,
+   nlat_ens=0,
+   jcap_ens=574,
+   l_ens_in_diff_time=.true.,
+   jcap_ens_test=0,readin_beta=.false.,
+   full_ensemble=.true.,pwgtflg=.true.,
+   ensemble_path="",
+ /
+ &RAPIDREFRESH_CLDSURF
+   i_gsdcldanal_type=${i_gsdcldanal_type},
+   dfi_radar_latent_heat_time_period=20.0,
+   l_use_hydroretrieval_all=.false.,
+   metar_impact_radius=10.0,
+   metar_impact_radius_lowCloud=4.0,
+   l_gsd_terrain_match_surfTobs=.false.,
+   l_sfcobserror_ramp_t=.false.,
+   l_sfcobserror_ramp_q=.false.,
+   l_PBL_pseudo_SurfobsT=.false.,
+   l_PBL_pseudo_SurfobsQ=.false.,
+   l_PBL_pseudo_SurfobsUV=.false.,
+   pblH_ration=0.75,
+   pps_press_incr=20.0,
+   l_gsd_limit_ocean_q=.false.,
+   l_pw_hgt_adjust=.false.,
+   l_limit_pw_innov=.false.,
+   max_innov_pct=0.1,
+   l_cleanSnow_WarmTs=.false.,
+   r_cleanSnow_WarmTs_threshold=5.0,
+   l_conserve_thetaV=.false.,
+   i_conserve_thetaV_iternum=3,
+   l_cld_bld=.false.,
+   cld_bld_hgt=1200.0,
+   build_cloud_frac_p=0.50,
+   clear_cloud_frac_p=0.1,
+   iclean_hydro_withRef=1,
+   iclean_hydro_withRef_allcol=0,
+ /
+ &CHEM
+ /
+ &SINGLEOB_TEST
+ /
+ &NST
+ /
+
 EOF
 
-#
-#-----------------------------------------------------------------------
-#
-# Copy the GSI executable to the run directory.
-#
-#-----------------------------------------------------------------------
-#
-gsi_exec="${EXECDIR}/gsi.x"
-gsi_exec="/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/fv3lamda/regional_workflow/exec/regional_gsi.x"
+echo Shun debug1
+anavinfo=$PARMfv3/anavinfo_fv3_65
+###anavinfo=$fixgsi/anavinfo_fv3_60
+berror=$fixgsi/$endianness/nam_glb_berror.f77.gcv
+emiscoef_IRwater=$fixcrtm/Nalli.IRwater.EmisCoeff.bin
+emiscoef_IRice=$fixcrtm/NPOESS.IRice.EmisCoeff.bin
+emiscoef_IRland=$fixcrtm/NPOESS.IRland.EmisCoeff.bin
+emiscoef_IRsnow=$fixcrtm/NPOESS.IRsnow.EmisCoeff.bin
+emiscoef_VISice=$fixcrtm/NPOESS.VISice.EmisCoeff.bin
+emiscoef_VISland=$fixcrtm/NPOESS.VISland.EmisCoeff.bin
+emiscoef_VISsnow=$fixcrtm/NPOESS.VISsnow.EmisCoeff.bin
+emiscoef_VISwater=$fixcrtm/NPOESS.VISwater.EmisCoeff.bin
+emiscoef_MWwater=$fixcrtm/FASTEM6.MWwater.EmisCoeff.bin
+aercoef=$fixcrtm/AerosolCoeff.bin
+cldcoef=$fixcrtm/CloudCoeff.bin
+#satinfo=$fixgsi/nam_regional_satinfo.txt
+satinfo=$PARMfv3/fv3sar_satinfo.txt
+scaninfo=$fixgsi/global_scaninfo.txt
+satangl=$fixgsi/nam_global_satangbias.txt
+atmsbeamdat=$fixgsi/atms_beamwidth.txt
+pcpinfo=$fixgsi/nam_global_pcpinfo.txt
+ozinfo=$fixgsi/nam_global_ozinfo.txt
+errtable=$fixgsi/nam_errtable.r3dv
+convinfo=$PARMfv3/rap_nam_regional_convinfo
+mesonetuselist=$fixgsi/nam_mesonet_uselist.txt
+stnuselist=$fixgsi/nam_mesonet_stnuselist.txt
+locinfo=$PARMfv3/nam_hybens_d01_info
+
+# Copy executable and fixed files to $DATA
+##$ncp $gsiexec ./gsi.x
+$ncp $anavinfo ./anavinfo
+$ncp $berror   ./berror_stats
+$ncp $emiscoef_IRwater ./Nalli.IRwater.EmisCoeff.bin
+$ncp $emiscoef_IRice ./NPOESS.IRice.EmisCoeff.bin
+$ncp $emiscoef_IRsnow ./NPOESS.IRsnow.EmisCoeff.bin
+$ncp $emiscoef_IRland ./NPOESS.IRland.EmisCoeff.bin
+$ncp $emiscoef_VISice ./NPOESS.VISice.EmisCoeff.bin
+$ncp $emiscoef_VISland ./NPOESS.VISland.EmisCoeff.bin
+$ncp $emiscoef_VISsnow ./NPOESS.VISsnow.EmisCoeff.bin
+$ncp $emiscoef_VISwater ./NPOESS.VISwater.EmisCoeff.bin
+$ncp $emiscoef_MWwater ./FASTEM6.MWwater.EmisCoeff.bin
+$ncp $aercoef  ./AerosolCoeff.bin
+$ncp $cldcoef  ./CloudCoeff.bin
+$ncp $satangl  ./satbias_angle
+$ncp $atmsbeamdat  ./atms_beamwidth.txt
+$ncp $satinfo  ./satinfo
+$ncp $scaninfo ./scaninfo
+$ncp $pcpinfo  ./pcpinfo
+$ncp $ozinfo   ./ozinfo
+$ncp $convinfo ./convinfo
+$ncp $errtable ./errtable
+$ncp $mesonetuselist ./mesonetuselist
+$ncp $stnuselist ./mesonet_stnuselist
+$ncp $fixgsi/prepobs_prep.bufrtable ./prepobs_prep.bufrtable
+
+# Copy CRTM coefficient files based on entries in satinfo file
+for file in `awk '{if($1!~"!"){print $1}}' ./satinfo | sort | uniq` ;do
+    $ncp $fixcrtm/${file}.SpcCoeff.bin ./
+    $ncp $fixcrtm/${file}.TauCoeff.bin ./
+done
 
 
-if [ -f $gsi_exec ]; then
-  print_info_msg "$VERBOSE" "
-Copying the GSI executable to the run directory..."
-  cp_vrfy ${gsi_exec} ${analworkdir}/gsi.x
-else
-  print_err_msg_exit "\
-The GSI executable specified in GSI_EXEC does not exist:
-  GSI_EXEC = \"$gsi_exec\"
-Build GSI and rerun."
+###export nmmb_nems_obs=${COMINnam}/nam.${PDYrun}
+export nmmb_nems_bias=${COMINbias}
+
+# Copy observational data to $tmpdir
+# Try RAP first
+PDYa=$YYYYMMDD
+cya=$HH
+export nmmb_nems_obs=${COMINrap}/rap.${PDYa}
+$ncp $nmmb_nems_obs/rap.t${cya}z.prepbufr.tm00  ./prepbufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.prepbufr.acft_profiles.tm00 prepbufr_profl
+#$ncp $nmmb_nems_obs/rap.t${cya}z.satwnd.tm00.bufr_d ./satwndbufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.1bhrs3.tm00.bufr_d ./hirs3bufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.1bhrs4.tm00.bufr_d ./hirs4bufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.mtiasi.tm00.bufr_d ./iasibufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.1bamua.tm00.bufr_d ./amsuabufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.1bamub.tm00.bufr_d ./amsubbufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.1bmhs.tm00.bufr_d  ./mhsbufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.goesnd.tm00.bufr_d ./gsnd1bufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.airsev.tm00.bufr_d ./airsbufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.cris.tm00.bufr_d ./crisbufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.atms.tm00.bufr_d ./atmsbufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.sevcsr.tm00.bufr_d ./seviribufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.radwnd.tm00.bufr_d ./radarbufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.nexrad.tm00.bufr_d ./l2rwbufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.crisf4.tm00.bufr_d ./crisfsbufr
+#$ncp $nmmb_nems_obs/rap.t${cya}z.gsrcsr.tm00.bufr_d ./abibufr
+#new ears data
+#$ncp $nmmb_nems_obs/rap.t${cya}z.esiasi.tm00.bufr_d ./iasibufrears
+#$ncp $nmmb_nems_obs/rap.t${cya}z.esamua.tm00.bufr_d ./amsuabufrears
+#$ncp $nmmb_nems_obs/rap.t${cya}z.esmhs.tm00.bufr_d  ./mhsbufrears
+#$ncp $nmmb_nems_obs/rap.t${cya}z.esatms.tm00.bufr_d ./atmsbufrears
+#$ncp $nmmb_nems_obs/rap.t${cya}z.escris.tm00.bufr_d ./crisfsbufrears
+#new direct broadcast
+#$ncp $nmmb_nems_obs/rap.t${cya}z.crsfdb.tm00.bufr_d ./crisfsbufr_db
+#$ncp $nmmb_nems_obs/rap.t${cya}z.atmsdb.tm00.bufr_d ./atmsbufr_db
+#$ncp $nmmb_nems_obs/rap.t${cya}z.iasidb.tm00.bufr_d ./iasibufr_db
+
+ls -1 prepbufr
+err0=$?
+
+
+#No RAP obs, get NAM data
+if [ $err0 -ne 0 ] ; then
+export nmmb_nems_obs=${COMINnam}/nam.${PDYrun}
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.prepbufr.${tmmark}  ./prepbufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.prepbufr.acft_profiles.${tmmark} prepbufr_profl
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.satwnd.${tmmark}.bufr_d ./satwndbufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.1bhrs3.${tmmark}.bufr_d ./hirs3bufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.1bhrs4.${tmmark}.bufr_d ./hirs4bufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.mtiasi.${tmmark}.bufr_d ./iasibufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.1bamua.${tmmark}.bufr_d ./amsuabufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.esamua.${tmmark}.bufr_d ./amsuabufrears
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.1bamub.${tmmark}.bufr_d ./amsubbufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.1bmhs.${tmmark}.bufr_d  ./mhsbufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.goesnd.${tmmark}.bufr_d ./gsnd1bufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.airsev.${tmmark}.bufr_d ./airsbufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.cris.${tmmark}.bufr_d ./crisbufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.atms.${tmmark}.bufr_d ./atmsbufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.sevcsr.${tmmark}.bufr_d ./seviribufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.radwnd.${tmmark}.bufr_d ./radarbufr
+$ncp $nmmb_nems_obs/nam.t${CYCrun}z.nexrad.${tmmark}.bufr_d ./l2rwbufr
 fi
-#
-#-----------------------------------------------------------------------
-#
-# Set and export variables.
-#
-#-----------------------------------------------------------------------
-#
-
-#
-#-----------------------------------------------------------------------
-#
-# Run the GSI.  Note that we have to launch the forecast from
-# the current cycle's run directory because the GSI executable will look
-# for input files in the current directory.
-#
-#-----------------------------------------------------------------------
-#
-# comment out for testing
-$APRUN ./gsi.x < gsiparm.anl > stdout 2>&1 || print_err_msg_exit "\
-Call to executable to run GSI returned with nonzero exit code."
 
 
-#-----------------------------------------------------------------------
-#
-# Copy fits file to COMOUT.
-#
-#-----------------------------------------------------------------------
-#
-  mv fort.201 fit_p1
-  mv fort.202 fit_w1
-  mv fort.203 fit_t1
-  mv fort.204 fit_q1
-  mv fort.205 fit_pw1
-  mv fort.207 fit_rad1
-  mv fort.209 fit_rw1
-  
-# cat fit_p1 fit_w1 fit_t1 fit_q1 fit_pw1 fit_rad1 fit_rw1 > $COMOUT/fv3lam.t${CYCrun}z.fits.${tmmark}
-# cat fort.208 fort.210 fort.211 fort.212 fort.213 fort.220 > $COMOUT/fv3lam.t${CYCrun}z.fits2.${tmmark}
+ls -l prepbufr
+err10=$?
 
-#-----------------------------------------------------------------------
-#
-# Copy analysis results to INPUT for model forecast.
-#
-#-----------------------------------------------------------------------
-#
+if [ $err10 -ne 0 ] ; then
+  msg="NO PREPBUFR FILE; ABORT GSI JOB"
+  err_exit $msg
+fi
+
+export GDAS_SATBIAS=NO
+
+if [ $GDAS_SATBIAS = NO ] ; then
+
+# Copy bias correction from prev cycle
+
+GESROOT_HOLD=/gpfs/dell2/emc/modeling/noscrub/emc.campara/nwges/fv3lamdax.hold
+cyctm06=06
+$ncp $nmmb_nems_bias/fv3lam.${cyctm06}z.satbias.tm01 ./satbias_in
+err1=$?
+if [ $err1 -ne 0 ] ; then
+  cp $GESROOT_HOLD/satbias_in ./satbias_in
+fi
+
+$ncp $nmmb_nems_bias/fv3lam.t${cyctm06}z.satbias_pc.tm01 ./satbias_pc
+err2=$?
+if [ $err2 -ne 0 ] ; then
+  cp $GESROOT_HOLD/satbias_pc ./satbias_pc
+fi
+
+$ncp $nmmb_nems_bias/fv3lam.t${cyctm06}z.radstat.tm01    ./radstat.gdas
+err3=$?
+if [ $err3 -ne 0 ] ; then
+  cp $GESROOT_HOLD/radstat.nam ./radstat.gdas
+fi
+
+else
+
+cp $GESROOT_HOLD/gdas.satbias_out ./satbias_in
+cp $GESROOT_HOLD/gdas.satbias_pc ./satbias_pc
+cp $GESROOT_HOLD/gdas.radstat_out ./radstat.gdas
+
+fi
+
+
+#for new type satellite to build the bias coreection file
+USE_RADSTAT=NO
+USE_RADSTAT=${USE_RADSTAT:-"YES"}
+USE_CFP=${USE_CFP:-"NO"}
+##############################################################
+# If requested, copy and de-tar guess radstat file
+if [ $USE_RADSTAT = "YES" ]; then
+   if [ $USE_CFP = "YES" ]; then
+     rm $DATA/unzip.sh $DATA/mp_unzip.sh
+     cat > $DATA/unzip.sh << EOFunzip
+#!/bin/sh
+   diag_file=\$1
+   fname=\$(echo \$diag_file | cut -d'.' -f1)
+   fdate=\$(echo \$diag_file | cut -d'.' -f2)
+   #$UNCOMPRESS \$diag_file
+   gunzip \$diag_file
+   fnameges=\$(echo \$fname | sed 's/_ges//g')
+   $NMV \$fname.\$fdate \$fnameges
+EOFunzip
+     chmod 755 $DATA/unzip.sh
+   fi
+   listdiag=$(tar xvf radstat.gdas | cut -d' ' -f2 | grep _ges)
+   for type in $listdiag; do
+      diag_file=$(echo $type | cut -d',' -f1)
+      if [ $USE_CFP = "YES" ] ; then
+         echo "$DATA/unzip.sh $diag_file" | tee -a $DATA/mp_unzip.sh
+      else
+         fname=$(echo $diag_file | cut -d'.' -f1)
+         date=$(echo $diag_file | cut -d'.' -f2)
+         #$UNCOMPRESS $diag_file
+         gunzip $diag_file
+         fnameges=$(echo $fname|sed 's/_ges//g')
+         #$NMV $fname.$date $fnameges
+         if [ $binary_diag = .true. ] ; then
+            mv $fname.$date $fnameges
+         elif [ $netcdf_diag = .true. ] ; then
+            mv $fname.$date${DIAG_SUFFIX} $fnameges
+         fi
+      fi
+  done
+  if [ $USE_CFP = "YES" ] ; then
+      chmod 755 $DATA/mp_unzip.sh
+      ncmd=$(cat $DATA/mp_unzip.sh | wc -l)
+      if [ $ncmd -gt 0 ]; then
+         ncmd_max=$((ncmd < npe_node_max ? ncmd : npe_node_max))
+         APRUNCFP_UNZIP=$(eval echo $APRUNCFP)
+         $APRUNCFP_UNZIP $DATA/mp_unzip.sh
+      fi
+   fi
+fi # if [ $USE_RADSTAT = "YES" ]
+
+
+# Aircraft bias correction ; get from GDAS/GFS for tm06, cycle through FV3DA
+# Try my GDAS dir first
+
+COMINgdas=$COMINgdas/gdas.${PDYa}/${cya}/atmos
+COMINgfs=$COMINgfs/gfs.${PDYa}/${cya}/atmos
+$ncp $COMINgdas/gdas.t${cya}z.abias_air ./aircftbias_in
+#if we don't find aircraft bias file from GDAS dirs, try GFS
+if [ -s aircftbias_in ] ; then
+  echo "found aircraft bias file from FV3GDAS"
+else
+  $ncp $COMINgfs/gfs.t${cya}z.abias_air ./aircftbias_in
+fi
+
+
+#if we still don't find aircraft bias file from GDAS/GFS dirs, get best available one
+if [ -s aircftbias_in ] ; then
+  echo "found aircraft bias file from FV3GDAS"
+else
+  cp $GESROOT_HOLD/gdas.airbias ./aircftbias_in
+fi
+
+cp $COMINrtma/rtma2p5.${PDYa}/rtma2p5.t${cya}z.w_rejectlist ./w_rejectlist
+cp $COMINrtma/rtma2p5.${PDYa}/rtma2p5.t${cya}z.t_rejectlist ./t_rejectlist
+cp $COMINrtma/rtma2p5.${PDYa}/rtma2p5.t${cya}z.p_rejectlist ./p_rejectlist
+cp $COMINrtma/rtma2p5.${PDYa}/rtma2p5.t${cya}z.q_rejectlist ./q_rejectlist
+
+
+
+#get coldstart 1st guess
+
+#   This file contains vertical weights for defining hybrid volume hydrostatic pressure interfaces
+dothis="false"
+if [ $dothis = "true" ]; then
+export fv3_case=$GUESSdir
+cp $Fix_temp/fv_core.res.nc fv3_akbk
+#   This file contains horizontal grid information
+cp $fv3_case/user_coupler.res coupler.res
+cp $Fix_temp/grid_spec.nc fv3_grid_spec
+cp $fv3_case/sfc_data.tile7.nc fv3_sfcdata
+cp $fv3_case/gfs_data.tile7.nc .
+ln -sf gfs_data.tile7.nc fv3_dynvars
+ln -sf gfs_data.tile7.nc fv3_tracer
+fi
+
+
+# Run gsi under Parallel Operating Environment (poe) on NCEP IBM
+#export pgm=regional_gsi.x
+#. prep_step
+
+startmsg
+${APRUN} $EXECfv3/regional_gsi.x < gsiparm.anl > stdout 2> stderr
+export err=$?;err_chk
+
+
+mv fort.201 fit_p1
+mv fort.202 fit_w1
+mv fort.203 fit_t1
+mv fort.204 fit_q1
+mv fort.205 fit_pw1
+mv fort.207 fit_rad1
+mv fort.209 fit_rw1
+
+cat fit_p1 fit_w1 fit_t1 fit_q1 fit_pw1 fit_rad1 fit_rw1 > $COMOUT/fv3lam.t${CYCrun}z.fits.${tmmark}
+cat fort.208 fort.210 fort.211 fort.212 fort.213 fort.220 > $COMOUT/fv3lam.t${CYCrun}z.fits2.${tmmark}
+echo Shun debug2
+
 
 if [ ${BKTYPE} -eq 1 ]; then  # cold start, put analysis back to current INPUT 
   cp_vrfy ${analworkdir}/fv3_dynvars                  ${bkpath}/gfs_data.tile7.halo0.nc
@@ -610,67 +940,21 @@ else                          # cycling
   cp_vrfy ${analworkdir}/fv3_sfcdata             ${bkpath}/sfc_data.nc
 fi
 
-#-----------------------------------------------------------------------
-# Loop over first and last outer loops to generate innovation
-# diagnostic files for indicated observation types (groups)
-#
-# NOTE:  Since we set miter=2 in GSI namelist SETUP, outer
-#        loop 03 will contain innovations with respect to 
-#        the analysis.  Creation of o-a innovation files
-#        is triggered by write_diag(3)=.true.  The setting
-#        write_diag(1)=.true. turns on creation of o-g
-#        innovation files.
-#-----------------------------------------------------------------------
-#
+exit
 
-netcdf_diag=${netcdf_diag:-".false."}
-binary_diag=${binary_diag:-".true."}
+cp satbias_out $GESROOT_HOLD/satbias_in
+cp satbias_out $COMOUT/fv3lam.t${CYCrun}z.satbias.${tmmark}
+cp satbias_pc.out $GESROOT_HOLD/satbias_pc
+cp satbias_pc.out $COMOUT/fv3lam.t${CYCrun}z.satbias_pc.${tmmark}
 
-loops="01 03"
-for loop in $loops; do
+cp aircftbias_out $COMOUT/fv3lam.t${CYCrun}z.abias_air.${tmmark}
+cp aircftbias_out $GESROOT_HOLD/gdas.airbias
 
-case $loop in
-  01) string=ges;;
-  03) string=anl;;
-   *) string=$loop;;
-esac
+cp gfs_data.tile7.nc $ANLdir/.
+cp fv3_sfcdata $ANLdir/sfc_data.tile7.nc
 
-#  Collect diagnostic files for obs types (groups) below
-if [ $binary_diag = ".true." ]; then
-   listall="conv hirs2_n14 msu_n14 sndr_g08 sndr_g11 sndr_g11 sndr_g12 sndr_g13 sndr_g08_prep sndr_g11_prep sndr_g12_prep sndr_g13_prep sndrd1_g11 sndrd2_g11 sndrd3_g11 sndrd4_g11 sndrd1_g12 sndrd2_g12 sndrd3_g12 sndrd4_g12 sndrd1_g13 sndrd2_g13 sndrd3_g13 sndrd4_g13 hirs3_n15 hirs3_n16 hirs3_n17 amsua_n15 amsua_n16 amsua_n17 amsub_n15 amsub_n16 amsub_n17 hsb_aqua airs_aqua amsua_aqua imgr_g08 imgr_g11 imgr_g12 pcp_ssmi_dmsp pcp_tmi_trmm sbuv2_n16 sbuv2_n17 sbuv2_n18 omi_aura ssmi_f13 ssmi_f14 ssmi_f15 hirs4_n18 hirs4_metop-a amsua_n18 amsua_metop-a mhs_n18 mhs_metop-a amsre_low_aqua amsre_mid_aqua amsre_hig_aqua ssmis_las_f16 ssmis_uas_f16 ssmis_img_f16 ssmis_env_f16 iasi_metop-a"
-   for type in $listall; do
-      count=$(ls pe*.${type}_${loop} | wc -l)
-      if [[ $count -gt 0 ]]; then
-         $(cat pe*.${type}_${loop} > diag_${type}_${string}.${YYYYMMDDHH})
-      fi
-   done
-fi
+##############################################################
 
-if [ $netcdf_diag = ".true." ]; then
-   listallnc="conv_ps conv_q conv_t conv_uv"
-
-   cat_exec="${EXECDIR}/ncdiag_cat.x"
-
-   if [ -f $cat_exec ]; then
-      print_info_msg "$VERBOSE" "
-        Copying the ncdiag_cat executable to the run directory..."
-      cp_vrfy ${cat_exec} ${analworkdir}/ncdiag_cat.x
-   else
-      print_err_msg_exit "\
-        The ncdiag_cat executable specified in cat_exec does not exist:
-        cat_exec = \"$cat_exec\"
-        Build GSI and rerun."
-   fi
-
-   for type in $listallnc; do
-      count=$(ls pe*.${type}_${loop}.nc4 | wc -l)
-      if [[ $count -gt 0 ]]; then
-         ./ncdiag_cat.x -o ncdiag_${type}_${string}.nc4.${YYYYMMDDHH} pe*.${type}_${loop}.nc4
-      fi
-   done
-fi
-
-done
 
 #
 #-----------------------------------------------------------------------
