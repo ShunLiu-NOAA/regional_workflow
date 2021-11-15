@@ -475,7 +475,8 @@ if [ "${FV3_VER}" == "EMC" ]; then
   cp $FIXLAM/${CASE}_oro_data.tile${tile}.halo4.nc INPUT/.
   if [ $BKTYPE = 1 ]; then
   # cold start
-  cp $FIXLAM/${CASE}_mosaic.nc INPUT/.
+  #cp $FIXLAM/${CASE}_mosaic.nc INPUT/.
+  cp $FIXLAM/${CASE}_mosaic.halo4.nc INPUT/${CASE}_mosaic.nc
   else
   cp $FIXLAM/${CASE}_mosaic.halo3.nc INPUT/${CASE}_mosaic.nc
   fi
