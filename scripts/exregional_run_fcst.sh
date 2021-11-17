@@ -716,7 +716,7 @@ fi
   
  COMOUT=$COMOUT_BASEDIR/${thistime}
  mkdir -p $COMOUT
- domain="CONUS"
+ domain="NA"
  
  for ((i=0;i<=${NFCSTHRS};i++))
  do
