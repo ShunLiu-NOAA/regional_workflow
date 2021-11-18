@@ -304,10 +304,12 @@ fi
 dothis="true"
 
 if [ $dothis = "true" ]; then
-cp_vrfy ${fixgriddir}/fv3_akbk                     fv3_akbk
-cp_vrfy ${fixgriddir}/fv3_grid_spec                fv3_grid_spec
+#cp_vrfy ${fixgriddir}/fv3_akbk                     fv3_akbk
+#cp_vrfy ${fixgriddir}/fv3_grid_spec                fv3_grid_spec
 
 if [ ${BKTYPE} -eq 1 ]; then  # cold start uses background from INPUT
+  cp_vrfy ${fixgriddir}/fix_temp_halo3/fv_core.res.nc     fv3_akbk
+  cp_vrfy ${fixgriddir}/fix_temp_halo3/grid_spec.nc       fv3_grid_spec
   cp_vrfy ${bkpath}/gfs_data.tile7.halo0.nc        gfs_data.tile7.halo0.nc_b
   #ncks -A -v  phis ${fixgriddir}/phis.nc           gfs_data.tile7.halo0.nc_b
   ncks -A -v  phis ${fixgriddir}/fv3_dynvars        gfs_data.tile7.halo0.nc_b
@@ -320,6 +322,9 @@ if [ ${BKTYPE} -eq 1 ]; then  # cold start uses background from INPUT
 
   fv3lam_bg_opt=1
 else                          # cycle uses background from restart
+  cp_vrfy ${fixgriddir}/fix_temp_halo3/fv_core.res.nc     fv3_akbk
+  cp_vrfy ${fixgriddir}/fix_temp_halo3/grid_spec.nc       fv3_grid_spec
+
   cp_vrfy  ${bkpath}/fv_core.res.tile1.nc             fv3_dynvars
   cp_vrfy  ${bkpath}/fv_tracer.res.tile1.nc           fv3_tracer
   cp_vrfy  ${bkpath}/sfc_data.nc                      fv3_sfcdata
