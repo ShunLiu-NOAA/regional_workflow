@@ -1010,8 +1010,8 @@ mv fort.205 fit_pw1
 mv fort.207 fit_rad1
 mv fort.209 fit_rw1
 
-cat fit_p1 fit_w1 fit_t1 fit_q1 fit_pw1 fit_rad1 fit_rw1 > $COMOUT/fv3lam.t${CYCrun}z.fits.${tmmark}
-cat fort.208 fort.210 fort.211 fort.212 fort.213 fort.220 > $COMOUT/fv3lam.t${CYCrun}z.fits2.${tmmark}
+cat fit_p1 fit_w1 fit_t1 fit_q1 fit_pw1 fit_rad1 fit_rw1 > $COMOUT/rrfs.${CYCrun}z.fits.${tmmark}
+cat fort.208 fort.210 fort.211 fort.212 fort.213 fort.220 > $COMOUT/rrfs.t${CYCrun}z.fits2.${tmmark}
 echo Shun debug2
 
 
@@ -1027,11 +1027,11 @@ fi
 exit
 
 cp satbias_out $GESROOT_HOLD/satbias_in
-cp satbias_out $COMOUT/fv3lam.t${CYCrun}z.satbias.${tmmark}
+cp satbias_out $COMOUT/rffs.${CYCrun}z.satbias.${tmmark}
 cp satbias_pc.out $GESROOT_HOLD/satbias_pc
-cp satbias_pc.out $COMOUT/fv3lam.t${CYCrun}z.satbias_pc.${tmmark}
+cp satbias_pc.out $COMOUT/rffs.${CYCrun}z.satbias_pc.${tmmark}
 
-cp aircftbias_out $COMOUT/fv3lam.t${CYCrun}z.abias_air.${tmmark}
+cp aircftbias_out $COMOUT/rffs.${CYCrun}z.abias_air.${tmmark}
 cp aircftbias_out $GESROOT_HOLD/gdas.airbias
 
 cp gfs_data.tile7.nc $ANLdir/.
