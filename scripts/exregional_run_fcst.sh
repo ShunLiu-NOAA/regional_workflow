@@ -721,7 +721,7 @@ fi
  for ((i=0;i<=${NFCSTHRS};i++))
  do
  fhr=$(printf "%02d" $i)
- mv PRSLEV.GrbF${fhr} ${COMOUT}/rrfs.t${cyc}z.${domain}.f${fhr}.${tmmark}.grib2
+ mv PRSLEV.GrbF${fhr} ${COMOUT}/rrfs.t${cyc}z.${domain}.prslev.f${fhr}.${tmmark}.grib2
  mv NATLEV.GrbF${fhr} ${COMOUT}/rrfs.t${cyc}z.${domain}.natlev.f${fhr}.${tmmark}.grib2
  done
 
