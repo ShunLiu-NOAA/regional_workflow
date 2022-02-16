@@ -33,6 +33,7 @@ if [[ $MACHINE == "WCOSS_DELL_P3" ]] ; then
   QUEUE_HPSS="dev"
   OBSPATH=/gpfs/hps/nco/ops/com/rap/prod
   OBSPATH_NSSLMOSIAC=/gpfs/dell1/nco/ops/dcom/prod/ldmdata/obs/upperair/mrms/conus
+  SST_ROOT=/gpfs/dell1/nco/ops/com/gfs/prod
 fi
 
 VERBOSE="TRUE"
