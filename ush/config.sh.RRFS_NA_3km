@@ -1,8 +1,21 @@
-MACHINE="jet"
+########################################
+# configues for WCOSS_DELL_P3
+########################################
+
+MACHINE="WCOSS_DELL_P3"
+
+if [[ $MACHINE == "WCOSS_DELL_P3" ]] ; then
+ACCOUNT="HRRR-T2O"
+RESERVATION="rrfsdet"
+EXPT_BASEDIR="/gpfs/dell6/emc/modeling/noscrub/Shun.Liu/rrfs_dev1/test"
+EXPT_SUBDIR="RRFS_NA_3km_dev1"
+else
 ACCOUNT="nrtrr"
 RESERVATION="rrfsdet"
 EXPT_BASEDIR="/home/rtrr/RRFS"
 EXPT_SUBDIR="RRFS_NA_3km_dev1"
+fi
+
 
 PARTITION_GRAPHICS=kjet,xjet
 
@@ -21,6 +34,15 @@ if [[ $MACHINE == "hera" ]] ; then
   PARTITION_DEFAULT=""
   PARTITION_FCST=""
   QUEUE_ANALYSIS="batch"
+fi
+
+if [[ $MACHINE == "WCOSS_DELL_P3" ]] ; then
+  ACCOUNT=HRRR-T2O
+  QUEUE_ANALYSIS="dev"
+  QUEUE_HPSS="dev"
+  OBSPATH=/gpfs/hps/nco/ops/com/rap/prod
+  OBSPATH_NSSLMOSIAC=/gpfs/dell1/nco/ops/dcom/prod/ldmdata/obs/upperair/mrms/conus
+  SST_ROOT=/gpfs/dell1/nco/ops/com/gfs/prod
 fi
 
 VERBOSE="TRUE"
@@ -45,20 +67,20 @@ LBC_SPEC_INTVL_HRS="1"
 EXTRN_MDL_LBCS_OFFSET_HRS="6"
 EXTRN_MDL_LBCS_SEARCH_OFFSET_HRS="0"
 
-DATE_FIRST_CYCL="20220201"
-DATE_LAST_CYCL="20220330"
+DATE_FIRST_CYCL="20220214"
+DATE_LAST_CYCL="20220228"
 CYCL_HRS=( "00" )
 CYCL_HRS_SPINSTART=("03" "15")
 CYCL_HRS_PRODSTART=("09" "21")
-CYCLEMONTH="2,3"
-CYCLEDAY="*"
+CYCLEMONTH="1"
+CYCLEDAY="14-28"
 #
 PREEXISTING_DIR_METHOD="upgrade"
 INITIAL_CYCLEDEF="${DATE_FIRST_CYCL}0300 ${DATE_LAST_CYCL}2300 12:00:00"
 BOUNDARY_CYCLEDEF="${DATE_FIRST_CYCL}0000 ${DATE_LAST_CYCL}2300 06:00:00"
 PROD_CYCLEDEF="${DATE_FIRST_CYCL}0900 ${DATE_LAST_CYCL}2300 01:00:00"
 POSTPROC_CYCLEDEF="${DATE_FIRST_CYCL}0900 ${DATE_LAST_CYCL}2300 01:00:00"
-POSTPROC_LONG_CYCLEDEF="${DATE_FIRST_CYCL}0900 ${DATE_LAST_CYCL}2300 06:00:00"
+POSTPROC_LONG_CYCLEDEF="${DATE_FIRST_CYCL}0500 ${DATE_LAST_CYCL}2300 06:00:00"
 ARCHIVE_CYCLEDEF="${DATE_FIRST_CYCL}0700 ${DATE_LAST_CYCL}2300 24:00:00"
 if [[ $DO_SPINUP == "TRUE" ]] ; then
   SPINUP_CYCLEDEF="00 03-08,15-20 ${CYCLEDAY} ${CYCLEMONTH} 2022 *"
@@ -77,10 +99,9 @@ RESTART_INTERVAL="1 2 3"
 SST_update_hour=01
 GVF_update_hour=04
 
-USE_FVCOM="TRUE"
+USE_FVCOM="FALSE"
 FVCOM_DIR="/mnt/lfs4/BMC/public/data/grids/glerl/owaq"
 FVCOM_FILE="tsfc_fv3grid"
-
 NCORES_RUN_ANAL=240
 WTIME_RUN_ANAL="01:00:00"
 HYBENSMEM_NMIN=66
@@ -97,9 +118,9 @@ PPN_RUN_PREPSTART="5"
 MEMO_RUN_REF2TTEN="60G"
 MEMO_RUN_NONVARCLDANL=80G
 
-WTIME_RUN_FCST="04:00:00"
-LAYOUT_X=35
-LAYOUT_Y=20
+WTIME_RUN_FCST="09:00:00"
+LAYOUT_X=28
+LAYOUT_Y=30
 IO_LAYOUT_Y=10
 NATIVE_RUN_FCST="--cpus-per-task 4 --exclusive"
 NATIVE_RUN_ANAL="--cpus-per-task 4 --exclusive"
@@ -152,6 +173,12 @@ COMINgfs=""
 
 . set_rrfs_config.sh
 
+if [[ $MACHINE == "WCOSS_DELL_P3" ]] ; then
+STMP="/gpfs/dell1/ptmp/Shun.Liu/stmp"  # Path to directory STMP that mostly contains input file
+PTMP="/gpfs/dell1/ptmp/Shun.Liu/ptmp"  # Path to directory STMP that mostly contains input files.
+NWGES="/gpfs/dell1/ptmp/Shun.Liu/nwges"  # Path to directory NWGES that save boundary, cold initial, restart files
+else
 STMP="/lfs4/BMC/nrtrr/NCO_dirs/stmp"  # Path to directory STMP that mostly contains input files.
 PTMP="/lfs4/BMC/nrtrr/NCO_dirs/ptmp"  # Path to directory STMP that mostly contains input files.
 NWGES="/lfs4/BMC/nrtrr/NCO_dirs/nwges"  # Path to directory NWGES that save boundary, cold initial, restart files
+fi
