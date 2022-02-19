@@ -354,6 +354,8 @@ if [ ${HH} -eq ${SST_update_hour} ] && [ ${cycle_type} == "prod" ] ; then
       cp ${SST_ROOT}/${YYJJJ00000000} latest.SST
    elif [ -r "${SST_ROOT}/sst.$YYYYMMDD/rtgssthr_grb_0.083.grib2" ]; then 
       cp ${SST_ROOT}/sst.$YYYYMMDD/rtgssthr_grb_0.083.grib2 latest.SST
+   elif [ -r "${SST_ROOT}/sst.$YYYYMMDDm1/rtgssthr_grb_0.083.grib2" ]; then 
+      cp ${SST_ROOT}/sst.$YYYYMMDDm1/rtgssthr_grb_0.083.grib2 latest.SST
    else
      echo "${SST_ROOT} data does not exist!!"
      echo "ERROR: No SST update at ${time_str}!!!!"
