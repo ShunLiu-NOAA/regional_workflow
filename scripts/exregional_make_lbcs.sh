@@ -58,6 +58,7 @@ hour zero).
 valid_args=( \
 "lbcs_dir" \
 "lbcs_nwges_dir" \
+"bchr" \
 )
 process_args valid_args "$@"
 #
@@ -136,7 +137,8 @@ extrn_mdl_var_defns_fp="${extrn_mdl_staging_dir}/${EXTRN_MDL_LBCS_VAR_DEFNS_FN}"
 #
 #-----------------------------------------------------------------------
 #
-workdir="${lbcs_dir}/tmp_LBCS"
+set -x
+workdir="${lbcs_dir}/tmp_LBCS_${bchr}"
 mkdir_vrfy -p "$workdir"
 cd_vrfy $workdir
 #
@@ -397,11 +399,12 @@ fi
 #-----------------------------------------------------------------------
 #
 num_fhrs="${#EXTRN_MDL_LBC_SPEC_FHRS[@]}"
-for (( i=0; i<${num_fhrs}; i++ )); do
+#for (( i=0; i<${num_fhrs}; i++ )); do
 #
 # Get the forecast hour of the external model.
 #
-  fhr="${EXTRN_MDL_LBC_SPEC_FHRS[$i]}"
+  i=${bchr}
+  fhr="${EXTRN_MDL_LBC_SPEC_FHRS[${i#0}]}"
 #
 # Set external model output file name and file type/format.  Note that
 # these are now inputs into chgres_cube.
@@ -415,11 +418,14 @@ for (( i=0; i<${num_fhrs}; i++ )); do
     ;;
   "FV3GFS")
     if [ "${FV3GFS_FILE_FMT_LBCS}" = "nemsio" ]; then
-      fn_atm_nemsio="${EXTRN_MDL_FNS[$i]}"
+      fn_atm_nemsio="${EXTRN_MDL_FNS[${i#0}]}"
+      #fn_atm_nemsio="${EXTRN_MDL_FNS[$i]}"
     elif [ "${FV3GFS_FILE_FMT_LBCS}" = "grib2" ]; then
-      fn_grib2="${EXTRN_MDL_FNS[$i]}"
+      fn_grib2="${EXTRN_MDL_FNS[${i#0}]}"
+      #fn_grib2="${EXTRN_MDL_FNS[$i]}"
     elif [ "${FV3GFS_FILE_FMT_LBCS}" = "netcdf" ]; then
-      fn_atm_nemsio="${EXTRN_MDL_FNS[$i]}"
+      fn_atm_nemsio="${EXTRN_MDL_FNS[${i#0}]}"
+      #fn_atm_nemsio="${EXTRN_MDL_FNS[$i]}"
     fi
     ;;
   "GDASENKF")
@@ -558,12 +564,13 @@ located in the following directory:
 # the forecast hour of the FV3-LAM (which is not necessarily the same as
 # that of the external model since their start times may be offset).
 #
-  lbc_spec_fhrs=( "${EXTRN_MDL_LBC_SPEC_FHRS[$i]}" ) 
+  lbc_spec_fhrs=( "${EXTRN_MDL_LBC_SPEC_FHRS[${i#0}]}" ) 
+  #lbc_spec_fhrs=( "${EXTRN_MDL_LBC_SPEC_FHRS[$i]}" ) 
   fcst_hhh=$(( ${lbc_spec_fhrs} - ${EXTRN_MDL_LBCS_OFFSET_HRS} ))
   fcst_hhh_FV3LAM=`printf %3.3i $fcst_hhh`
   mv_vrfy gfs.bndy.nc ${lbcs_dir}/gfs_bndy.tile7.${fcst_hhh_FV3LAM}.nc
 
-done
+#done
 
 #
 #-----------------------------------------------------------------------
